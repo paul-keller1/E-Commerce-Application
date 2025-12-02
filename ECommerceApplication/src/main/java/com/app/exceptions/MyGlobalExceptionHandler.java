@@ -53,12 +53,12 @@ public class MyGlobalExceptionHandler {
 	}
 	
 	@ExceptionHandler(ConstraintViolationException.class)
-	public ResponseEntity<Map<String, String>> myConstraintsVoilationException(ConstraintViolationException e) {
+	public ResponseEntity<Map<String, String>> myConstraintsViolationException(ConstraintViolationException e) {
 		Map<String, String> res = new HashMap<>();
 
-		e.getConstraintViolations().forEach(voilation -> {
-			String fieldName = voilation.getPropertyPath().toString();
-			String message = voilation.getMessage();
+		e.getConstraintViolations().forEach(Violation -> {
+			String fieldName = Violation.getPropertyPath().toString();
+			String message = Violation.getMessage();
 
 			res.put(fieldName, message);
 		});

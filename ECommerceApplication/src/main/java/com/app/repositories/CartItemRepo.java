@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 import com.app.entites.CartItem;
 import com.app.entites.Product;
 
+import java.util.Optional;
+
 public interface CartItemRepo extends JpaRepository<CartItem, Long>{
 	
 	@Query("SELECT ci.product FROM CartItem ci WHERE ci.product.id = ?1")
@@ -16,7 +18,7 @@ public interface CartItemRepo extends JpaRepository<CartItem, Long>{
 //	List<Cart> findCartsByProductId(Long productId);
 	
 	@Query("SELECT ci FROM CartItem ci WHERE ci.cart.id = ?1 AND ci.product.id = ?2")
-	CartItem findCartItemByProductIdAndCartId(Long cartId, Long productId);
+	Optional<CartItem> findCartItemByProductIdAndCartId(Long cartId, Long productId);
 	
 //	@Query("SELECT ci.cart FROM CartItem ci WHERE ci.cart.user.email = ?1 AND ci.cart.id = ?2")
 //	Cart findCartByEmailAndCartId(String email, Integer cartId);
