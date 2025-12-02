@@ -140,13 +140,13 @@ public class CartServiceImpl implements CartService {
 			throw new APIException("Product " + product.getProductName() + " not available in the cart!!!");
 		}
 
-		double cartPrice = cart.getTotalPrice() - (cartItem.getProductPrice() * cartItem.getQuantity());
+		double cartPriceWithoutPreviousQuantity = cart.getTotalPrice() - (cartItem.getProductPrice() * cartItem.getQuantity());
 
 		cartItem.setProductPrice(product.getSpecialPrice());
 
-		cart.setTotalPrice(cartPrice + (cartItem.getProductPrice() * cartItem.getQuantity()));
+		cart.setTotalPrice(cartPriceWithoutPreviousQuantity + (cartItem.getProductPrice() * cartItem.getQuantity()));
 
-		cartItem = cartItemRepo.save(cartItem);
+		cartItemRepo.save(cartItem);
 	}
 
 	@Override
@@ -172,7 +172,7 @@ public class CartServiceImpl implements CartService {
 			throw new APIException("Product " + product.getProductName() + " not available in the cart!!!");
 		}
 
-		double cartPrice = cart.getTotalPrice() - (cartItem.getProductPrice() * cartItem.getQuantity());
+		double cartPriceWithoutPreviousQuantity = cart.getTotalPrice() - (cartItem.getProductPrice() * cartItem.getQuantity());
 
 		product.setQuantity(product.getQuantity() + cartItem.getQuantity() - quantity);
 
@@ -180,9 +180,10 @@ public class CartServiceImpl implements CartService {
 		cartItem.setQuantity(quantity);
 		cartItem.setDiscount(product.getDiscount());
 
-		cart.setTotalPrice(cartPrice + (cartItem.getProductPrice() * quantity));
+		cart.setTotalPrice(cartPriceWithoutPreviousQuantity + (cartItem.getProductPrice() * quantity));
 
-		cartItem = cartItemRepo.save(cartItem);
+
+		cartItemRepo.save(cartItem);
 
 		CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
 
