@@ -29,6 +29,8 @@ public class CategoryServiceImplTest {
     @Mock
     private CategoryRepo categoryRepo;
 
+    @Mock
+    private ProductService productService;
 
     @Spy
     private ModelMapper modelMapper = new ModelMapper();
