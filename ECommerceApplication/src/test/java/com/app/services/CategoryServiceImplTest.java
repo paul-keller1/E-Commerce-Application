@@ -6,7 +6,6 @@ import com.app.exceptions.APIException;
 import com.app.payloads.CategoryDTO;
 import com.app.payloads.CategoryResponse;
 import com.app.repositories.CategoryRepo;
-import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,8 +29,6 @@ public class CategoryServiceImplTest {
     @Mock
     private CategoryRepo categoryRepo;
 
-    @Mock
-    private ProductService productService;
 
     @Spy
     private ModelMapper modelMapper = new ModelMapper();
@@ -54,8 +51,13 @@ public class CategoryServiceImplTest {
     }
 
     @AfterEach
-    void tearDown() throws Exception {
-        autoCloseable.close();
+    void tearDown() {
+        try {
+            autoCloseable.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 
 
