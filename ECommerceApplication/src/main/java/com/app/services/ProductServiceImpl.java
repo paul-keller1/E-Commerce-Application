@@ -18,7 +18,6 @@ import com.app.entites.Cart;
 import com.app.entites.Category;
 import com.app.entites.Product;
 import com.app.exceptions.APIException;
-import com.app.exceptions.ResourceNotFoundException;
 import com.app.payloads.CartDTO;
 import com.app.payloads.ProductDTO;
 import com.app.payloads.ProductResponse;
@@ -57,7 +56,7 @@ public class ProductServiceImpl implements ProductService {
 	public ProductDTO addProduct(Long categoryId, Product product) {
 
 		Category category = categoryRepo.findById(categoryId)
-				.orElseThrow(() -> new ResourceNotFoundException("Category", "categoryId", categoryId));
+				.orElseThrow(() -> new APIException("Category not found with categoryId: " + categoryId));
 
 		boolean isProductNotPresent = true;
 
@@ -120,7 +119,7 @@ public class ProductServiceImpl implements ProductService {
 			String sortOrder) {
 
 		Category category = categoryRepo.findById(categoryId)
-				.orElseThrow(() -> new ResourceNotFoundException("Category", "categoryId", categoryId));
+				.orElseThrow(() -> new APIException("Category not found with categoryId: " + categoryId));
 
 		Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending()
 				: Sort.by(sortBy).descending();
@@ -183,11 +182,8 @@ public class ProductServiceImpl implements ProductService {
 	@Override
 	public ProductDTO updateProduct(Long productId, Product product) {
 		Product productFromDB = productRepo.findById(productId)
-				.orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
+				.orElseThrow(() -> new APIException("Product not found with productId: " + productId));
 
-		if (productFromDB == null) {
-			throw new APIException("Product not found with productId: " + productId);
-		}
 
 		product.setImage(productFromDB.getImage());
 		product.setProductId(productId);
@@ -220,12 +216,9 @@ public class ProductServiceImpl implements ProductService {
 	@Override
 	public ProductDTO updateProductImage(Long productId, MultipartFile image) throws IOException {
 		Product productFromDB = productRepo.findById(productId)
-				.orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
+				.orElseThrow(() -> new APIException("Product not found with productId: " + productId));
 
-		if (productFromDB == null) {
-			throw new APIException("Product not found with productId: " + productId);
-		}
-		
+
 		String fileName = fileService.uploadImage(path, image);
 		
 		productFromDB.setImage(fileName);
@@ -239,7 +232,7 @@ public class ProductServiceImpl implements ProductService {
 	public String deleteProduct(Long productId) {
 
 		Product product = productRepo.findById(productId)
-				.orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
+				.orElseThrow(() -> new APIException("Product not found with productId: " + productId));
 
 		List<Cart> carts = cartRepo.findCartsByProductId(productId);
 
