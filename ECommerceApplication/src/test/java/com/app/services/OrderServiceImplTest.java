@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -39,6 +40,8 @@ import com.app.repositories.PaymentRepo;
 import com.app.repositories.UserRepo;
 
 public class OrderServiceImplTest {
+
+    private AutoCloseable autoCloseable;
 
     @Mock
     private UserRepo userRepo;
@@ -81,7 +84,7 @@ public class OrderServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        autoCloseable = MockitoAnnotations.openMocks(this);
 
         emailId = "test@test.com";
 
@@ -122,6 +125,16 @@ public class OrderServiceImplTest {
         order.setTotalAmount(300.0);
         order.setOrderStatus("Order Accepted !");
     }
+
+    @AfterEach
+    void tearDown() {
+        try {
+            autoCloseable.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
     // ---------------------------------------------------------
     // 1. placeOrder

@@ -6,7 +6,6 @@ import com.app.exceptions.APIException;
 import com.app.payloads.CategoryDTO;
 import com.app.payloads.CategoryResponse;
 import com.app.repositories.CategoryRepo;
-import com.app.repositories.ProductRepo;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
