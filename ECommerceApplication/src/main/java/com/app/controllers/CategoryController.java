@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.app.config.AppConstants;
-import com.app.entites.Category;
+import com.app.model.Category;
 import com.app.payloads.CategoryDTO;
 import com.app.payloads.CategoryResponse;
 import com.app.services.CategoryService;
@@ -37,7 +37,7 @@ public class CategoryController {
 		return new ResponseEntity<CategoryDTO>(savedCategoryDTO, HttpStatus.CREATED);
 	}
 
-	@GetMapping("/public/categories")
+	@GetMapping("/user/categories")
 	public ResponseEntity<CategoryResponse> getCategories(
 			@RequestParam(name = "pageNumber", defaultValue = AppConstants.PAGE_NUMBER, required = false) Integer pageNumber,
 			@RequestParam(name = "pageSize", defaultValue = AppConstants.PAGE_SIZE, required = false) Integer pageSize,

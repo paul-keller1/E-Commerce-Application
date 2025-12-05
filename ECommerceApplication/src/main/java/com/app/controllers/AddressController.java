@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.app.entites.Address;
+import com.app.model.Address;
 import com.app.payloads.AddressDTO;
 import com.app.services.AddressService;
 

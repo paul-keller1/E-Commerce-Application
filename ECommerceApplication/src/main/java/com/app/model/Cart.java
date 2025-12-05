@@ -1,7 +1,8 @@
-package com.app.entites;
+package com.app.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -35,4 +36,31 @@ public class Cart {
 	private List<CartItem> cartItems = new ArrayList<>();
 
 	private Double totalPrice = 0.0;
+
+	@Override
+	public int hashCode() {
+		int hash = 7;
+		hash = 59 * hash + Objects.hashCode(this.getCartId());
+		return hash;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null) {
+			return false;
+		}
+		if (!(obj instanceof OrderItem other)) {
+			return false;
+		}
+		return Objects.equals(this.getCartId(), other.getOrderItemId());
+	}
+
+	@Override
+	public String toString() {
+		return "id=" + cartId;
+	}
+
+
+
+
 }

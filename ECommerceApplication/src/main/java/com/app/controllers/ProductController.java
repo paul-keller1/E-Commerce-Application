@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.app.config.AppConstants;
-import com.app.entites.Product;
+import com.app.model.Product;
 import com.app.payloads.ProductDTO;
 import com.app.payloads.ProductResponse;
 import com.app.services.ProductService;
@@ -41,7 +41,7 @@ public class ProductController {
 		return new ResponseEntity<ProductDTO>(savedProduct, HttpStatus.CREATED);
 	}
 
-	@GetMapping("/public/products")
+	@GetMapping("/user/products")
 	public ResponseEntity<ProductResponse> getAllProducts(
 			@RequestParam(name = "pageNumber", defaultValue = AppConstants.PAGE_NUMBER, required = false) Integer pageNumber,
 			@RequestParam(name = "pageSize", defaultValue = AppConstants.PAGE_SIZE, required = false) Integer pageSize,
@@ -53,7 +53,7 @@ public class ProductController {
 		return new ResponseEntity<ProductResponse>(productResponse, HttpStatus.FOUND);
 	}
 
-	@GetMapping("/public/categories/{categoryId}/products")
+	@GetMapping("/user/categories/{categoryId}/products")
 	public ResponseEntity<ProductResponse> getProductsByCategory(@PathVariable Long categoryId,
 			@RequestParam(name = "pageNumber", defaultValue = AppConstants.PAGE_NUMBER, required = false) Integer pageNumber,
 			@RequestParam(name = "pageSize", defaultValue = AppConstants.PAGE_SIZE, required = false) Integer pageSize,
@@ -66,7 +66,7 @@ public class ProductController {
 		return new ResponseEntity<ProductResponse>(productResponse, HttpStatus.FOUND);
 	}
 	
-	@GetMapping("/public/products/keyword/{keyword}")
+	@GetMapping("/user/products/keyword/{keyword}")
 	public ResponseEntity<ProductResponse> getProductsByKeyword(@PathVariable String keyword,
 			@RequestParam(name = "pageNumber", defaultValue = AppConstants.PAGE_NUMBER, required = false) Integer pageNumber,
 			@RequestParam(name = "pageSize", defaultValue = AppConstants.PAGE_SIZE, required = false) Integer pageSize,

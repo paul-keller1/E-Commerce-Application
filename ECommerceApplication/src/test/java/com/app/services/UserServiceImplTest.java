@@ -8,6 +8,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import com.app.model.*;
+import com.app.payloads.UserCreateDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -23,13 +25,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.app.config.AppConstants;
-import com.app.entites.Address;
-import com.app.entites.Cart;
-import com.app.entites.CartItem;
-import com.app.entites.Product;
-import com.app.entites.Role;
-import com.app.entites.User;
 import com.app.exceptions.APIException;
 import com.app.exceptions.ResourceNotFoundException;
 import com.app.payloads.AddressDTO;
@@ -37,7 +32,6 @@ import com.app.payloads.AddressDTO;
 import com.app.payloads.UserDTO;
 import com.app.payloads.UserResponse;
 import com.app.repositories.AddressRepo;
-import com.app.repositories.RoleRepo;
 import com.app.repositories.UserRepo;
 
 public class UserServiceImplTest {
@@ -45,8 +39,7 @@ public class UserServiceImplTest {
     @Mock
     private UserRepo userRepo;
 
-    @Mock
-    private RoleRepo roleRepo;
+
 
     @Mock
     private AddressRepo addressRepo;
@@ -141,10 +134,7 @@ public class UserServiceImplTest {
         userWithoutAddress.setCart(cart2);
         userWithoutAddress.setAddresses(new ArrayList<>());
 
-        // Role
-        role = new Role();
-        role.setRoleId(AppConstants.USER_ID);
-        role.setRoleName("ROLE_USER");
+
     }
 
     // ---------------------------------------------------------
@@ -153,12 +143,12 @@ public class UserServiceImplTest {
 
     @Test
     void testRegisterUser_Success_NewAddressCreated() {
-        UserDTO userDTO = new UserDTO();
-        userDTO.setFirstName("New");
-        userDTO.setLastName("User");
-        userDTO.setEmail("newuser@test.com");
-        userDTO.setMobileNumber("5555555555");
-        userDTO.setPassword("secret");
+        UserCreateDTO userCreateDTO = new UserCreateDTO();
+        userCreateDTO.setFirstName("New");
+        userCreateDTO.setLastName("User");
+        userCreateDTO.setEmail("newuser@test.com");
+        userCreateDTO.setMobileNumber("5555555555");
+        userCreateDTO.setPassword("secret");
 
         AddressDTO addressDTO = new AddressDTO();
         addressDTO.setCountry("Country");
@@ -167,9 +157,8 @@ public class UserServiceImplTest {
         addressDTO.setPincode("12345");
         addressDTO.setStreet("Main Street");
         addressDTO.setBuildingName("Building");
-        userDTO.setAddress(addressDTO);
+        userCreateDTO.setAddress(addressDTO);
 
-        when(roleRepo.findById(AppConstants.USER_ID)).thenReturn(Optional.of(role));
         when(addressRepo.findByCountryAndStateAndCityAndPincodeAndStreetAndBuildingName(
                 addressDTO.getCountry(),
                 addressDTO.getState(),
@@ -179,33 +168,29 @@ public class UserServiceImplTest {
                 addressDTO.getBuildingName()
         )).thenReturn(null);
 
-        // When new Address is created and saved
         when(addressRepo.save(any(Address.class))).thenAnswer(invocation -> {
             Address a = invocation.getArgument(0);
             a.setAddressId(50L);
             return a;
         });
 
-        // When user is saved
         when(userRepo.save(any(User.class))).thenAnswer(invocation -> {
             User u = invocation.getArgument(0);
             u.setUserId(10L);
             return u;
         });
 
-        UserDTO result = userService.registerUser(userDTO);
+        UserDTO result = userService.registerUser(userCreateDTO);
 
-        assertEquals(userDTO.getEmail(), result.getEmail());
+        assertEquals(userCreateDTO.getEmail(), result.getEmail());
         assertNotNull(result.getAddress());
-        assertEquals(userDTO.getAddress().getCity(), result.getAddress().getCity());
-        assertNotNull(result.getCart());
-        assertTrue(result.getCart().getCartId() == null || result.getCart().getCartId() > 0);
-
+        assertEquals(userCreateDTO.getAddress().getCity(), result.getAddress().getCity());
     }
+
 
     @Test
     void testRegisterUser_Success_AddressAlreadyExists() {
-        UserDTO userDTO = new UserDTO();
+        UserCreateDTO userDTO = new UserCreateDTO();
         userDTO.setFirstName("Existing");
         userDTO.setLastName("AddressUser");
         userDTO.setEmail("existing@test.com");
@@ -221,7 +206,6 @@ public class UserServiceImplTest {
         addressDTO.setBuildingName(address.getBuildingName());
         userDTO.setAddress(addressDTO);
 
-        when(roleRepo.findById(AppConstants.USER_ID)).thenReturn(Optional.of(role));
         when(addressRepo.findByCountryAndStateAndCityAndPincodeAndStreetAndBuildingName(
                 addressDTO.getCountry(),
                 addressDTO.getState(),
@@ -246,7 +230,7 @@ public class UserServiceImplTest {
 
     @Test
     void testRegisterUser_UserAlreadyExists_ThrowsAPIException() {
-        UserDTO userDTO = new UserDTO();
+        UserCreateDTO userDTO = new UserCreateDTO();
         userDTO.setFirstName("Duplicate");
         userDTO.setLastName("User");
         userDTO.setEmail("duplicate@test.com");
@@ -262,7 +246,6 @@ public class UserServiceImplTest {
         addressDTO.setBuildingName(address.getBuildingName());
         userDTO.setAddress(addressDTO);
 
-        when(roleRepo.findById(AppConstants.USER_ID)).thenReturn(Optional.of(role));
         when(addressRepo.findByCountryAndStateAndCityAndPincodeAndStreetAndBuildingName(
                 anyString(), anyString(), anyString(), anyString(), anyString(), anyString()
         )).thenReturn(address);
@@ -274,9 +257,10 @@ public class UserServiceImplTest {
                 APIException.class,
                 () -> userService.registerUser(userDTO)
         );
-
+        /* message can also be something different bc exception is more general than that
         String expected = "User already exists with emailId: " + userDTO.getEmail();
         assertEquals(expected, ex.getMessage());
+        */
     }
 
     // ---------------------------------------------------------

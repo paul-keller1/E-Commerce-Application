@@ -1,8 +1,10 @@
 package com.app.controllers;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
+import com.app.payloads.UserCreateDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,7 +43,7 @@ public class AuthController {
 	private PasswordEncoder passwordEncoder;
 
 	@PostMapping("/register")
-	public ResponseEntity<Map<String, Object>> registerHandler(@Valid @RequestBody UserDTO user) throws UserNotFoundException {
+	public ResponseEntity<Map<String, Object>> registerHandler(@Valid @RequestBody UserCreateDTO user) throws UserNotFoundException {
 		String encodedPass = passwordEncoder.encode(user.getPassword());
 
 		user.setPassword(encodedPass);
@@ -49,9 +51,11 @@ public class AuthController {
 		UserDTO userDTO = userService.registerUser(user);
 
 		String token = jwtUtil.generateToken(userDTO.getEmail());
+		Map<String, Object> response = new HashMap<>();
+		response.put("token", token);
+		response.put("user", userDTO);
 
-		return new ResponseEntity<Map<String, Object>>(Collections.singletonMap("jwt-token", token),
-				HttpStatus.CREATED);
+		return new ResponseEntity<>(response, HttpStatus.CREATED);
 	}
 
 	@PostMapping("/login")

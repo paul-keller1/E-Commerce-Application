@@ -3,6 +3,8 @@ package com.app.services;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.app.model.*;
+import com.app.payloads.*;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -13,21 +15,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.app.config.AppConstants;
-import com.app.entites.Address;
-import com.app.entites.Cart;
-import com.app.entites.CartItem;
-import com.app.entites.Role;
-import com.app.entites.User;
 import com.app.exceptions.APIException;
 import com.app.exceptions.ResourceNotFoundException;
-import com.app.payloads.AddressDTO;
-import com.app.payloads.CartDTO;
-import com.app.payloads.ProductDTO;
-import com.app.payloads.UserDTO;
-import com.app.payloads.UserResponse;
 import com.app.repositories.AddressRepo;
-import com.app.repositories.RoleRepo;
 import com.app.repositories.UserRepo;
 
 import jakarta.transaction.Transactional;
@@ -39,8 +29,7 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private UserRepo userRepo;
 
-	@Autowired
-	private RoleRepo roleRepo;
+
 
 	@Autowired
 	private AddressRepo addressRepo;
@@ -51,34 +40,56 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private PasswordEncoder passwordEncoder;
 
+
+
 	@Autowired
 	private ModelMapper modelMapper;
 
-	@Override
-	public UserDTO registerUser(UserDTO userDTO) {
+	public User toUser(UserCreateDTO dto) {
+		User user = modelMapper.map(dto, User.class);
+		user.setRoles(dto.getRoles());
 
+		// Important: these you usually *override* server-side:
+		user.setCart(null);              // cart is created in service, not from DTO
+
+		// Address: entity has List<Address>, DTO has single AddressDTO
+		if (dto.getAddress() != null) {
+			Address address = modelMapper.map(dto.getAddress(), Address.class);
+			user.setAddresses(List.of(address));
+		}
+
+		return user;
+	}
+
+
+	@Override
+	public UserDTO registerUser(UserCreateDTO userCreateDTO) {
 		try {
-			User user = modelMapper.map(userDTO, User.class);
+			User user = toUser(userCreateDTO);
+
 
 			Cart cart = new Cart();
+
+
+			// owning side:
+			cart.setUser(user);
+			// inverse side:
 			user.setCart(cart);
 
-			Role role = roleRepo.findById(AppConstants.USER_ID).get();
-			user.getRoles().add(role);
+			String country = userCreateDTO.getAddress().getCountry();
+			String state = userCreateDTO.getAddress().getState();
+			String city = userCreateDTO.getAddress().getCity();
+			String pincode = userCreateDTO.getAddress().getPincode();
+			String street = userCreateDTO.getAddress().getStreet();
+			String buildingName = userCreateDTO.getAddress().getBuildingName();
 
-			String country = userDTO.getAddress().getCountry();
-			String state = userDTO.getAddress().getState();
-			String city = userDTO.getAddress().getCity();
-			String pincode = userDTO.getAddress().getPincode();
-			String street = userDTO.getAddress().getStreet();
-			String buildingName = userDTO.getAddress().getBuildingName();
-
-			Address address = addressRepo.findByCountryAndStateAndCityAndPincodeAndStreetAndBuildingName(country, state,
-					city, pincode, street, buildingName);
+			Address address = addressRepo
+					.findByCountryAndStateAndCityAndPincodeAndStreetAndBuildingName(
+							country, state, city, pincode, street, buildingName
+					);
 
 			if (address == null) {
 				address = new Address(country, state, city, pincode, street, buildingName);
-
 				address = addressRepo.save(address);
 			}
 
@@ -86,18 +97,26 @@ public class UserServiceImpl implements UserService {
 
 			User registeredUser = userRepo.save(user);
 
-			cart.setUser(registeredUser);
-
-			userDTO = modelMapper.map(registeredUser, UserDTO.class);
-
-			userDTO.setAddress(modelMapper.map(user.getAddresses().stream().findFirst().get(), AddressDTO.class));
+			UserDTO userDTO = modelMapper.map(registeredUser, UserDTO.class);
+			userDTO.setAddress(
+					modelMapper.map(
+							registeredUser.getAddresses().get(0),
+							AddressDTO.class
+					)
+			);
+			System.out.println(user);
 
 			return userDTO;
-		} catch (DataIntegrityViolationException e) {
-			throw new APIException("User already exists with emailId: " + userDTO.getEmail());
-		}
 
+		} catch (DataIntegrityViolationException e) {
+			throw new APIException(
+					"Data Integrity Violation for user with email: "
+							+ (userCreateDTO != null ? userCreateDTO.getEmail() : "null")
+							+ "; " + e.getMessage()
+			);
+		}
 	}
+
 
 	@Override
 	public UserResponse getAllUsers(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {

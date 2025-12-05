@@ -16,13 +16,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import com.app.entites.Cart;
-import com.app.entites.CartItem;
-import com.app.entites.Product;
+import com.app.model.Cart;
+import com.app.model.CartItem;
+import com.app.model.Product;
 import com.app.exceptions.APIException;
-import com.app.exceptions.ResourceNotFoundException;
 import com.app.payloads.CartDTO;
-import com.app.payloads.ProductDTO;
 import com.app.repositories.CartItemRepo;
 import com.app.repositories.CartRepo;
 import com.app.repositories.ProductRepo;
