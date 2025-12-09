@@ -1,13 +1,11 @@
 package com.app.payloads;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import com.app.entites.Role;
-
+import com.app.model.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -20,7 +18,7 @@ public class UserDTO {
 	private String mobileNumber;
 	private String email;
 	private String password;
-	private Set<Role> roles = new HashSet<>();
+	private Set<Role> roles;
 	private AddressDTO address;
 	private CartDTO cart;
 }

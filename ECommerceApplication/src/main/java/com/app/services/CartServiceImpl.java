@@ -7,11 +7,10 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.app.entites.Cart;
-import com.app.entites.CartItem;
-import com.app.entites.Product;
+import com.app.model.Cart;
+import com.app.model.CartItem;
+import com.app.model.Product;
 import com.app.exceptions.APIException;
-import com.app.exceptions.ResourceNotFoundException;
 import com.app.payloads.CartDTO;
 import com.app.payloads.ProductDTO;
 import com.app.repositories.CartItemRepo;
@@ -51,15 +50,15 @@ public class CartServiceImpl implements CartService {
 		Optional<CartItem>  cartItem = cartItemRepo.findCartItemByProductIdAndCartId(cartId, productId);
 
 		if (cartItem.isPresent()) {
-			throw new APIException("Product " + product.getProductName() + " already exists in the cart!!!");
+			throw new APIException("Product " + product.getName() + " already exists in the cart!!!");
 		}
 
 		if (product.getQuantity() == 0) {
-			throw new APIException(product.getProductName() + " is not available!!!");
+			throw new APIException(product.getName() + " is not available!!!");
 		}
 
 		if (product.getQuantity() < quantity) {
-			throw new APIException("Please, make an order of the " + product.getProductName()
+			throw new APIException("Please, make an order of the " + product.getName()
 					+ " less than or equal to the quantity " + product.getQuantity() + "!!!");
 		}
 
@@ -96,19 +95,17 @@ public class CartServiceImpl implements CartService {
 			throw new APIException("No cart exists!!!");
 		}
 
-		List<CartDTO> cartDTOs = carts.stream().map(cart -> {
-			CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
+        return carts.stream().map(cart -> {
+            CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
 
-			List<ProductDTO> products = cart.getCartItems().stream()
-					.map(p -> modelMapper.map(p.getProduct(), ProductDTO.class)).collect(Collectors.toList());
+            List<ProductDTO> products = cart.getCartItems().stream()
+                    .map(p -> modelMapper.map(p.getProduct(), ProductDTO.class)).collect(Collectors.toList());
 
-			cartDTO.setProducts(products);
+            cartDTO.setProducts(products);
 
-			return cartDTO;
+            return cartDTO;
 
-		}).collect(Collectors.toList());
-
-		return cartDTOs;
+        }).collect(Collectors.toList());
 	}
 
 	@Override
@@ -138,7 +135,7 @@ public class CartServiceImpl implements CartService {
 				.orElseThrow(() -> new APIException("Product with productId" + productId + "was not found!!!"));
 
 		CartItem cartItem = cartItemRepo.findCartItemByProductIdAndCartId(cartId, productId)
-				.orElseThrow(() -> new APIException("Product " + product.getProductName() + " not available in the cart!!!"));
+				.orElseThrow(() -> new APIException("Product " + product.getName() + " not available in the cart!!!"));
 
 
 		double cartPriceWithoutPreviousQuantity = cart.getTotalPrice() - (cartItem.getProductPrice() * cartItem.getQuantity());
@@ -159,16 +156,16 @@ public class CartServiceImpl implements CartService {
 				.orElseThrow(() -> new APIException("Product with productId" + productId + "was not found!!!"));
 
 		if (product.getQuantity() == 0) {
-			throw new APIException(product.getProductName() + " is not available!!!");
+			throw new APIException(product.getName() + " is not available!!!");
 		}
 
 		if (product.getQuantity() < quantity) {
-			throw new APIException("Please, make an order of the " + product.getProductName()
+			throw new APIException("Please, make an order of the " + product.getName()
 					+ " less than or equal to the quantity " + product.getQuantity() + "!!!");
 		}
 
 		CartItem cartItem = cartItemRepo.findCartItemByProductIdAndCartId(cartId, productId)
-				.orElseThrow(() -> new APIException("Product " + product.getProductName() + " not available in the cart!!!"));
+				.orElseThrow(() -> new APIException("Product " + product.getName() + " not available in the cart!!!"));
 
 
 		double cartPriceWithoutPreviousQuantity = cart.getTotalPrice() - (cartItem.getProductPrice() * cartItem.getQuantity());
@@ -212,7 +209,7 @@ public class CartServiceImpl implements CartService {
 
 		cartItemRepo.deleteCartItemByProductIdAndCartId(cartId, productId);
 
-		return "Product " + cartItem.getProduct().getProductName() + " removed from the cart !!!";
+		return "Product " + cartItem.getProduct().getName() + " removed from the cart !!!";
 	}
 
 }

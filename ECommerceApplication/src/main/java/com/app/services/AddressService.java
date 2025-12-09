@@ -2,7 +2,7 @@ package com.app.services;
 
 import java.util.List;
 
-import com.app.entites.Address;
+import com.app.model.Address;
 import com.app.payloads.AddressDTO;
 
 public interface AddressService {

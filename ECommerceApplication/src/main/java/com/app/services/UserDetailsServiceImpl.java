@@ -10,7 +10,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.app.config.UserInfoConfig;
-import com.app.entites.User;
+import com.app.model.User;
 import com.app.repositories.UserRepo;
 
 @Service
@@ -25,6 +25,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 	public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 		Optional<User> user = userRepo.findByEmail(email);
 		
-		return user.map(UserInfoConfig::new).orElseThrow(() -> new APIException("User with email" + email + "not found!!!"));
+		return user.map(UserInfoConfig::new).orElseThrow(() -> new APIException("User with email " + email + " not found!!!"));
 	}
 }

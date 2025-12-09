@@ -1,4 +1,4 @@
-package com.app.entites;
+package com.app.model;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -12,6 +12,8 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.Objects;
 
 @Entity
 @Data
@@ -30,5 +32,32 @@ public class Payment {
 	@NotBlank
 	@Size(min = 4, message = "Payment method must contain atleast 4 characters")
 	private String paymentMethod;
+
+
+	@Override
+	public int hashCode() {
+		int hash = 7;
+		hash = 59 * hash + Objects.hashCode(this.getPaymentId());
+		return hash;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null) {
+			return false;
+		}
+		if (!(obj instanceof OrderItem other)) {
+			return false;
+		}
+		return Objects.equals(this.getPaymentId(), other.getOrderItemId());
+	}
+
+	@Override
+	public String toString() {
+		return "id=" + paymentId;
+	}
+
+
+
 
 }

@@ -1,7 +1,7 @@
 package com.app.services;
 
-import com.app.entites.Category;
-import com.app.entites.Product;
+import com.app.model.Category;
+import com.app.model.Product;
 import com.app.exceptions.APIException;
 import com.app.payloads.CategoryDTO;
 import com.app.payloads.CategoryResponse;
@@ -72,7 +72,7 @@ public class CategoryServiceImplTest {
         when(categoryRepo.findByCategoryName(category.getCategoryName())).thenReturn(null);
         when(categoryRepo.save(category)).thenReturn(category);
 
-        assertEquals(modelMapper.map(category, CategoryDTO.class), categoryService.createCategory(category));
+        assertEquals(modelMapper.map(category, CategoryDTO.class), categoryService.createCategory(modelMapper.map(category, CategoryDTO.class)));
     }
 
     @Test
@@ -81,9 +81,9 @@ public class CategoryServiceImplTest {
         anotherCategory.setCategoryName(category.getCategoryName());
 
         when(categoryRepo.findByCategoryName(anotherCategory.getCategoryName()))
-                .thenReturn(category);
+                .thenReturn(Optional.of(category));
 
-        assertThrows(APIException.class, () -> categoryService.createCategory(anotherCategory));
+        assertThrows(APIException.class, () -> categoryService.createCategory(modelMapper.map(anotherCategory, CategoryDTO.class)));
     }
 
     @Test
@@ -92,7 +92,7 @@ public class CategoryServiceImplTest {
         when(categoryRepo.findByCategoryName(category.getCategoryName())).thenReturn(null);
         when(categoryRepo.save(category)).thenThrow(APIException.class);
 
-        assertThrows(APIException.class, () -> categoryService.createCategory(category));
+        assertThrows(APIException.class, () -> categoryService.createCategory(modelMapper.map(category, CategoryDTO.class)));
     }
 
 
@@ -287,7 +287,7 @@ public class CategoryServiceImplTest {
         otherCategory.setCategoryName("Clashing Name");
 
         when(categoryRepo.findById(categoryId)).thenReturn(Optional.of(existingCategory));
-        when(categoryRepo.findByCategoryName(updateRequest.getCategoryName())).thenReturn(otherCategory);
+        when(categoryRepo.findByCategoryName(updateRequest.getCategoryName())).thenReturn(Optional.of(otherCategory));
 
         APIException ex = assertThrows(APIException.class, () -> categoryService.updateCategory(updateRequest, categoryId)
         );
@@ -311,7 +311,7 @@ public class CategoryServiceImplTest {
         sameNameCategory.setCategoryName("Same Name");
 
         when(categoryRepo.findById(categoryId)).thenReturn(Optional.of(existingCategory));
-        when(categoryRepo.findByCategoryName(updateRequest.getCategoryName())).thenReturn(sameNameCategory);
+        when(categoryRepo.findByCategoryName(updateRequest.getCategoryName())).thenReturn(Optional.of(sameNameCategory));
         when(categoryRepo.save(any(Category.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         CategoryDTO result = categoryService.updateCategory(updateRequest, categoryId);

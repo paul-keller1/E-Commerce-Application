@@ -1,4 +1,4 @@
-package com.app.entites;
+package com.app.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -7,9 +7,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import java.util.Objects;
+
 
 @Entity
 @Data
@@ -33,5 +34,31 @@ public class OrderItem {
 	private Integer quantity;
 	private double discount;
 	private double orderedProductPrice;
-	
+
+	@Override
+	public int hashCode() {
+		int hash = 7;
+		hash = 59 * hash + Objects.hashCode(this.getOrderItemId());
+		return hash;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null) {
+			return false;
+		}
+		if (!(obj instanceof OrderItem other)) {
+			return false;
+		}
+		return Objects.equals(this.getOrderItemId(), other.getOrderItemId());
+	}
+
+	@Override
+	public String toString() {
+		return "id=" + orderItemId;
+	}
+
+
+
+
 }

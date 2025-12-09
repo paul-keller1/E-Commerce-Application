@@ -14,10 +14,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import com.app.entites.Category;
-import com.app.entites.Product;
+import com.app.model.Category;
+import com.app.model.Product;
 import com.app.exceptions.APIException;
-import com.app.exceptions.ResourceNotFoundException;
 import com.app.payloads.CategoryDTO;
 import com.app.payloads.CategoryResponse;
 import com.app.repositories.CategoryRepo;
@@ -50,17 +49,16 @@ public class CategoryServiceImpl implements CategoryService {
 
 
 	@Override
-	public CategoryDTO createCategory(Category category) {
-		Category previouslySavedCategory = categoryRepo.findByCategoryName(category.getCategoryName());
-
-
-
-        if (previouslySavedCategory != null) {
-			throw new APIException("Category with the name '" + category.getCategoryName() + "' already exists !!!");
+	public CategoryDTO createCategory(CategoryDTO categoryDTO) {
+		if(categoryRepo.findByCategoryName(categoryDTO.getCategoryName()).isPresent()) {
+			throw new APIException("Category with the name '" + categoryDTO.getCategoryName() + "' already exists !!!");
 		}
-		categoryRepo.save(category);
 
-		return modelMapper.map(category, CategoryDTO.class);
+
+
+		categoryRepo.save(modelMapper.map(categoryDTO, Category.class));
+
+		return categoryDTO;
 	}
 
 	@Override
@@ -124,7 +122,7 @@ public class CategoryServiceImpl implements CategoryService {
 		categoryRepo.findById(categoryId)
 				.orElseThrow(() -> new APIException("Category with the id '" + categoryId + "' doesn't exists !!!"));
 
-		Optional<Category> existing = Optional.ofNullable(categoryRepo.findByCategoryName(category.getCategoryName()));
+		Optional<Category> existing = categoryRepo.findByCategoryName(category.getCategoryName());
 		if (existing.isPresent() && !existing.get().getCategoryId().equals(categoryId)) {
 			throw new APIException("Category name '" + category.getCategoryName() + "' already exists!");
 		}

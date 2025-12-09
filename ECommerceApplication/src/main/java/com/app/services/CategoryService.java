@@ -1,12 +1,12 @@
 package com.app.services;
 
-import com.app.entites.Category;
+import com.app.model.Category;
 import com.app.payloads.CategoryDTO;
 import com.app.payloads.CategoryResponse;
 
 public interface CategoryService {
 
-	CategoryDTO createCategory(Category category);
+	CategoryDTO createCategory(CategoryDTO categoryDTO);
 
 	CategoryResponse getCategories(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder);
 

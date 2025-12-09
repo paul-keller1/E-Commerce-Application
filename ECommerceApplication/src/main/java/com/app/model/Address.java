@@ -1,7 +1,8 @@
-package com.app.entites;
+package com.app.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -27,27 +28,27 @@ public class Address {
 	private Long addressId;
 
 	@NotBlank
-	@Size(min = 5, message = "Street name must contain atleast 5 characters")
+	@Size(min = 5, message = "Street name must contain at least 5 characters")
 	private String street;
 	
 	@NotBlank
-	@Size(min = 5, message = "Building name must contain atleast 5 characters")
+	@Size(min = 5, message = "Building name must contain at least 5 characters")
 	private String buildingName;
 	
 	@NotBlank
-	@Size(min = 4, message = "City name must contain atleast 4 characters")
+	@Size(min = 4, message = "City name must contain at least 4 characters")
 	private String city;
 	
 	@NotBlank
-	@Size(min = 2, message = "State name must contain atleast 2 characters")
+	@Size(min = 2, message = "State name must contain at least 2 characters")
 	private String state;
 	
 	@NotBlank
-	@Size(min = 2, message = "Country name must contain atleast 2 characters")
+	@Size(min = 2, message = "Country name must contain at least 2 characters")
 	private String country;
 	
 	@NotBlank
-	@Size(min = 6, message = "Pincode must contain atleast 6 characters")
+	@Size(min = 5, max = 10, message = "Pincode must contain between 5 and 10 characters")
 	private String pincode;
 
 	@ManyToMany(mappedBy = "addresses")
@@ -61,5 +62,32 @@ public class Address {
 		this.street = street;
 		this.buildingName = buildingName;
 	}
+
+	@Override
+	public int hashCode() {
+		int hash = 7;
+		hash = 59 * hash + Objects.hashCode(this.getAddressId());
+		return hash;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null) {
+			return false;
+		}
+		if (!(obj instanceof OrderItem other)) {
+			return false;
+		}
+		return Objects.equals(this.getAddressId(), other.getOrderItemId());
+	}
+
+	@Override
+	public String toString() {
+		return "id=" + addressId;
+	}
+
+
+
+
 
 }

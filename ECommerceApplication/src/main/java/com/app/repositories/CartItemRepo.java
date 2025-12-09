@@ -4,8 +4,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
-import com.app.entites.CartItem;
-import com.app.entites.Product;
+import com.app.model.CartItem;
+import com.app.model.Product;
 
 import java.util.Optional;
 

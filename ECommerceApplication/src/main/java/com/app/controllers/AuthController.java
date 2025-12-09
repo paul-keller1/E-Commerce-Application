@@ -1,8 +1,10 @@
 package com.app.controllers;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
+import com.app.payloads.UserCreateDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.app.exceptions.UserNotFoundException;
 import com.app.payloads.LoginCredentials;
 import com.app.payloads.UserDTO;
-import com.app.security.JWTUtil;
+import com.app.security.JWTService;
 import com.app.services.UserService;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -32,7 +34,7 @@ public class AuthController {
 	private UserService userService;
 
 	@Autowired
-	private JWTUtil jwtUtil;
+	private JWTService jwtService;
 
 	@Autowired
 	private AuthenticationManager authenticationManager;
@@ -41,17 +43,19 @@ public class AuthController {
 	private PasswordEncoder passwordEncoder;
 
 	@PostMapping("/register")
-	public ResponseEntity<Map<String, Object>> registerHandler(@Valid @RequestBody UserDTO user) throws UserNotFoundException {
+	public ResponseEntity<Map<String, Object>> registerHandler(@Valid @RequestBody UserCreateDTO user) throws UserNotFoundException {
 		String encodedPass = passwordEncoder.encode(user.getPassword());
 
 		user.setPassword(encodedPass);
 
 		UserDTO userDTO = userService.registerUser(user);
 
-		String token = jwtUtil.generateToken(userDTO.getEmail());
+		String token = jwtService.generateToken(userDTO.getEmail());
+		Map<String, Object> response = new HashMap<>();
+		response.put("token", token);
+		response.put("user", userDTO);
 
-		return new ResponseEntity<Map<String, Object>>(Collections.singletonMap("jwt-token", token),
-				HttpStatus.CREATED);
+		return new ResponseEntity<>(response, HttpStatus.CREATED);
 	}
 
 	@PostMapping("/login")
@@ -62,7 +66,8 @@ public class AuthController {
 
 		authenticationManager.authenticate(authCredentials);
 
-		String token = jwtUtil.generateToken(credentials.getEmail());
+		String token = jwtService.generateToken(credentials.getEmail());
+
 
 		return Collections.singletonMap("jwt-token", token);
 	}

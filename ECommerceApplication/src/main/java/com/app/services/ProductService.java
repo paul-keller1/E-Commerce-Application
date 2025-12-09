@@ -1,18 +1,22 @@
 package com.app.services;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
 
-import com.app.entites.Product;
+import com.app.model.Product;
 import com.app.payloads.ProductDTO;
 import com.app.payloads.ProductResponse;
 
 public interface ProductService {
 
-	ProductDTO addProduct(Long categoryId, Product product);
+	ProductDTO addProduct(Long categoryId, ProductDTO productDTO);
 
-	ProductResponse getAllProducts(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder);
+
+	List<Product> getAllProductsFull();
+
+	ProductResponse getAllProductsResponse(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder);
 
 	ProductResponse searchByCategory(Long categoryId, Integer pageNumber, Integer pageSize, String sortBy,
 			String sortOrder);

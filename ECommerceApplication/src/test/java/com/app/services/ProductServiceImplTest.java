@@ -17,10 +17,10 @@ import org.springframework.data.domain.*;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.app.entites.Cart;
-import com.app.entites.CartItem;
-import com.app.entites.Category;
-import com.app.entites.Product;
+import com.app.model.Cart;
+import com.app.model.CartItem;
+import com.app.model.Category;
+import com.app.model.Product;
 import com.app.exceptions.APIException;
 import com.app.payloads.ProductDTO;
 import com.app.payloads.ProductResponse;
@@ -71,7 +71,7 @@ public class ProductServiceImplTest {
 
         product = new Product();
         product.setProductId(1L);
-        product.setProductName("Phone");
+        product.setName("Phone");
         product.setDescription("Smartphone");
         product.setPrice(1000.0);
         product.setDiscount(10); // 10%
@@ -93,10 +93,10 @@ public class ProductServiceImplTest {
             return p;
         });
 
-        ProductDTO result = productService.addProduct(category.getCategoryId(), product);
+        ProductDTO result = productService.addProduct(category.getCategoryId(), modelMapper.map(product, ProductDTO.class));
 
         assertNotNull(result);
-        assertEquals(product.getProductName(), result.getProductName());
+        assertEquals(product.getName(), result.getName());
         assertEquals("default.png", product.getImage());
 
         double expectedSpecialPrice =
@@ -109,7 +109,7 @@ public class ProductServiceImplTest {
     @Test
     void testAddProduct_DuplicateProduct_ThrowsAPIException() {
         Product existing = new Product();
-        existing.setProductName(product.getProductName());
+        existing.setName(product.getName());
         existing.setDescription(product.getDescription());
 
         category.getProducts().add(existing);
@@ -117,7 +117,7 @@ public class ProductServiceImplTest {
         when(categoryRepo.findById(category.getCategoryId())).thenReturn(Optional.of(category));
 
         assertThrows(APIException.class,
-                () -> productService.addProduct(category.getCategoryId(), product));
+                () -> productService.addProduct(category.getCategoryId(), modelMapper.map(product, ProductDTO.class)));
 
         verify(productRepo, never()).save(any(Product.class));
     }
@@ -127,7 +127,7 @@ public class ProductServiceImplTest {
         when(categoryRepo.findById(category.getCategoryId())).thenReturn(Optional.empty());
 
         assertThrows(APIException.class,
-                () -> productService.addProduct(category.getCategoryId(), product));
+                () -> productService.addProduct(category.getCategoryId(), modelMapper.map(product, ProductDTO.class)));
 
         verify(productRepo, never()).save(any(Product.class));
     }
@@ -139,13 +139,13 @@ public class ProductServiceImplTest {
         category.setCategoryId(1L);
 
         Product existing = new Product();
-        existing.setProductName("Other name");
+        existing.setName("Other name");
         existing.setDescription("Other description");
 
         category.setProducts(List.of(existing));
 
         Product newProduct = new Product();
-        newProduct.setProductName("Other name");
+        newProduct.setName("Other name");
         newProduct.setDescription("Unique desc");
         newProduct.setPrice(100);
         newProduct.setDiscount(10);
@@ -157,9 +157,9 @@ public class ProductServiceImplTest {
             return p;
         });
 
-        ProductDTO result = productService.addProduct(1L, newProduct);
+        ProductDTO result = productService.addProduct(1L, modelMapper.map(newProduct, ProductDTO.class));
 
-        assertEquals("Other name", result.getProductName());
+        assertEquals("Other name", result.getName());
     }
 
         @Test
@@ -168,13 +168,13 @@ public class ProductServiceImplTest {
             category.setCategoryId(1L);
 
             Product existing = new Product();
-            existing.setProductName("Other name");
+            existing.setName("Other name");
             existing.setDescription("Other description");
 
             category.setProducts(List.of(existing));
 
             Product newProduct = new Product();
-            newProduct.setProductName("Unique name");
+            newProduct.setName("Unique name");
             newProduct.setDescription("Other description");
             newProduct.setPrice(100);
             newProduct.setDiscount(10);
@@ -187,9 +187,9 @@ public class ProductServiceImplTest {
             });
 
 
-        ProductDTO result = productService.addProduct(1L, newProduct);
+        ProductDTO result = productService.addProduct(1L, modelMapper.map(product, ProductDTO.class));
 
-        assertEquals("Unique name", result.getProductName());
+        assertEquals("Unique name", result.getName());
     }
 
 
@@ -202,11 +202,11 @@ public class ProductServiceImplTest {
     void testGetAllProducts_SortAscending() {
         Product p1 = new Product();
         p1.setProductId(10L);
-        p1.setProductName("A");
+        p1.setName("A");
 
         Product p2 = new Product();
         p2.setProductId(20L);
-        p2.setProductName("B");
+        p2.setName("B");
 
         int pageNumber = 0;
         int pageSize = 2;
@@ -216,7 +216,7 @@ public class ProductServiceImplTest {
         when(productRepo.findAll((Pageable) any())).thenReturn(page);
 
         ProductResponse response =
-                productService.getAllProducts(pageNumber, pageSize, "productName", "asc");
+                productService.getAllProductsResponse(pageNumber, pageSize, "productName", "asc");
 
         assertEquals(2, response.getContent().size());
         assertEquals(pageNumber, response.getPageNumber());
@@ -231,7 +231,7 @@ public class ProductServiceImplTest {
     void testGetAllProducts_SortDescending() {
         Product p1 = new Product();
         p1.setProductId(10L);
-        p1.setProductName("A");
+        p1.setName("A");
 
         int pageNumber = 0;
         int pageSize = 1;
@@ -241,7 +241,7 @@ public class ProductServiceImplTest {
         when(productRepo.findAll((Pageable) any())).thenReturn(page);
 
         ProductResponse response =
-                productService.getAllProducts(pageNumber, pageSize, "productName", "desc");
+                productService.getAllProductsResponse(pageNumber, pageSize, "productName", "desc");
 
         assertEquals(1, response.getContent().size());
         assertEquals(pageNumber, response.getPageNumber());
@@ -256,7 +256,7 @@ public class ProductServiceImplTest {
     void testSearchByCategory_Success_WithProducts() {
         Product p1 = new Product();
         p1.setProductId(10L);
-        p1.setProductName("Phone");
+        p1.setName("Phone");
 
         int pageNumber = 0;
         int pageSize = 1;
@@ -316,7 +316,7 @@ public class ProductServiceImplTest {
     void testSearchProductByKeyword_Success() {
         Product p1 = new Product();
         p1.setProductId(10L);
-        p1.setProductName("Phone");
+        p1.setName("Phone");
 
         int pageNumber = 0;
         int pageSize = 1;
@@ -325,14 +325,14 @@ public class ProductServiceImplTest {
 
         String keyword = "phone";
 
-        when(productRepo.findByProductNameLike(eq(keyword), any())).thenReturn(page);
+        when(productRepo.findByNameLike(eq(keyword), any())).thenReturn(page);
 
         ProductResponse response =
                 productService.searchProductByKeyword(
                         keyword, pageNumber, pageSize, "productName", "asc");
 
         assertEquals(1, response.getContent().size());
-        assertEquals(p1.getProductName(), response.getContent().get(0).getProductName());
+        assertEquals(p1.getName(), response.getContent().get(0).getName());
     }
 
     @Test
@@ -345,7 +345,7 @@ public class ProductServiceImplTest {
 
         String keyword = "phone";
 
-        when(productRepo.findByProductNameLike(eq(keyword), any())).thenReturn(emptyPage);
+        when(productRepo.findByNameLike((keyword), any())).thenReturn(emptyPage);
 
         APIException ex = assertThrows(
                 APIException.class,
@@ -368,7 +368,7 @@ public class ProductServiceImplTest {
         when(productRepo.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Product newData = new Product();
-        newData.setProductName("New Phone");
+        newData.setName("New Phone");
         newData.setDescription("New Desc");
         newData.setPrice(2000.0);
         newData.setDiscount(20);
@@ -377,7 +377,7 @@ public class ProductServiceImplTest {
         ProductDTO result = productService.updateProduct(product.getProductId(), newData);
 
         assertNotNull(result);
-        assertEquals(newData.getProductName(), result.getProductName());
+        assertEquals(newData.getName(), result.getName());
 
         double expectedSpecialPrice =
                 newData.getPrice() - ((newData.getDiscount() * 0.01) * newData.getPrice());
@@ -416,7 +416,7 @@ public class ProductServiceImplTest {
                 .thenReturn(Arrays.asList(cart1, cart2));
 
         Product newData = new Product();
-        newData.setProductName("Updated Phone");
+        newData.setName("Updated Phone");
         newData.setDescription("Updated Desc");
         newData.setPrice(1500.0);
         newData.setDiscount(10);
@@ -425,7 +425,7 @@ public class ProductServiceImplTest {
         ProductDTO result = productService.updateProduct(product.getProductId(), newData);
 
         assertNotNull(result);
-        assertEquals(newData.getProductName(), result.getProductName());
+        assertEquals(newData.getName(), result.getName());
 
         verify(cartService, times(1))
                 .updateProductInCarts(cart1.getCartId(), product.getProductId());
@@ -438,7 +438,7 @@ public class ProductServiceImplTest {
         when(productRepo.findById(product.getProductId())).thenReturn(Optional.empty());
 
         Product newData = new Product();
-        newData.setProductName("Updated");
+        newData.setName("Updated");
 
         assertThrows(APIException.class,
                 () -> productService.updateProduct(product.getProductId(), newData));

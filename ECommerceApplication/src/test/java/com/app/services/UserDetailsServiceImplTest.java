@@ -6,7 +6,6 @@ import static org.mockito.Mockito.*;
 import java.util.Optional;
 
 import com.app.exceptions.APIException;
-import org.aspectj.lang.annotation.After;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,7 +14,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.app.entites.User;
+import com.app.model.User;
 import com.app.repositories.UserRepo;
 
 public class UserDetailsServiceImplTest {
@@ -88,7 +87,7 @@ public class UserDetailsServiceImplTest {
                 () -> userDetailsService.loadUserByUsername(email)
         );
 
-        String expectedMessage = "User with email" + email + "not found!!!";
+        String expectedMessage = "User with email " + email + " not found!!!";
         assertEquals(expectedMessage, ex.getMessage());
 
         verify(userRepo, times(1)).findByEmail(email);
