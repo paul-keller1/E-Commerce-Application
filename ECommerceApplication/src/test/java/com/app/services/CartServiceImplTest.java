@@ -58,7 +58,7 @@ public class CartServiceImplTest {
 
         product = new Product();
         product.setProductId(1L);
-        product.setProductName("Test Product");
+        product.setName("Test Product");
         product.setSpecialPrice(100.0);
         product.setDiscount(10);
         product.setQuantity(10);

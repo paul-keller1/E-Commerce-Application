@@ -48,7 +48,7 @@ public class Address {
 	private String country;
 	
 	@NotBlank
-	@Size(min = 5, max = 7, message = "Pincode must contain between 5 and 7 characters")
+	@Size(min = 5, max = 10, message = "Pincode must contain between 5 and 10 characters")
 	private String pincode;
 
 	@ManyToMany(mappedBy = "addresses")

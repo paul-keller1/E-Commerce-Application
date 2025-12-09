@@ -43,6 +43,9 @@ public class ProductServiceImpl implements ProductService {
 	@Autowired
 	private CartService cartService;
 
+
+
+
 	@Autowired
 	private FileService fileService;
 
@@ -53,18 +56,18 @@ public class ProductServiceImpl implements ProductService {
 	private String path;
 
 	@Override
-	public ProductDTO addProduct(Long categoryId, Product product) {
+	public ProductDTO addProduct(Long categoryId, ProductDTO productDTO) {
 
 		Category category = categoryRepo.findById(categoryId)
 				.orElseThrow(() -> new APIException("Category not found with categoryId: " + categoryId));
 
 		boolean isProductNotPresent = true;
 
-		List<Product> products = category.getProducts();
+		List<Product> products = getAllProductsFull();
 
 		for (int i = 0; i < products.size(); i++) {
-			if (products.get(i).getProductName().equals(product.getProductName())
-					&& products.get(i).getDescription().equals(product.getDescription())) {
+			if (products.get(i).getName().equals(productDTO.getName())
+					&& products.get(i).getDescription().equals(productDTO.getDescription())) {
 
 				isProductNotPresent = false;
 				break;
@@ -72,12 +75,18 @@ public class ProductServiceImpl implements ProductService {
 		}
 
 		if (isProductNotPresent) {
+			Product product = new Product();
+			product.setName(productDTO.getName());
 			product.setImage("default.png");
+			product.setDescription(productDTO.getDescription());
+			product.setQuantity(productDTO.getQuantity());
+			product.setPrice(productDTO.getPrice());
+			product.setDiscount(productDTO.getDiscount());
 
-			product.setCategory(category);
 
-			double specialPrice = product.getPrice() - ((product.getDiscount() * 0.01) * product.getPrice());
+			double specialPrice = productDTO.getPrice() - ((productDTO.getDiscount() * 0.01) * productDTO.getPrice());
 			product.setSpecialPrice(specialPrice);
+			product.setCategory(category);
 
 			Product savedProduct = productRepo.save(product);
 
@@ -88,7 +97,7 @@ public class ProductServiceImpl implements ProductService {
 	}
 
 	@Override
-	public ProductResponse getAllProducts(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
+	public ProductResponse getAllProductsResponse(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
 
 		Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending()
 				: Sort.by(sortBy).descending();
@@ -113,6 +122,15 @@ public class ProductServiceImpl implements ProductService {
 
 		return productResponse;
 	}
+
+	@Override
+	public List<Product> getAllProductsFull() {
+
+		return productRepo.findAll();
+	}
+
+
+
 
 	@Override
 	public ProductResponse searchByCategory(Long categoryId, Integer pageNumber, Integer pageSize, String sortBy,
@@ -156,7 +174,7 @@ public class ProductServiceImpl implements ProductService {
 
 		Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
 
-		Page<Product> pageProducts = productRepo.findByProductNameLike(keyword, pageDetails);
+		Page<Product> pageProducts = productRepo.findByNameLike(keyword, pageDetails);
 
 		List<Product> products = pageProducts.getContent();
 		

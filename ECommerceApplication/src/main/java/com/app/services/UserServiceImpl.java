@@ -1,6 +1,8 @@
 package com.app.services;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.app.model.*;
@@ -47,7 +49,7 @@ public class UserServiceImpl implements UserService {
 
 	public User toUser(UserCreateDTO dto) {
 		User user = modelMapper.map(dto, User.class);
-		user.setRoles(dto.getRoles());
+		user.setRoles(Set.of(Role.USER));
 
 		// Important: these you usually *override* server-side:
 		user.setCart(null);              // cart is created in service, not from DTO
@@ -55,7 +57,9 @@ public class UserServiceImpl implements UserService {
 		// Address: entity has List<Address>, DTO has single AddressDTO
 		if (dto.getAddress() != null) {
 			Address address = modelMapper.map(dto.getAddress(), Address.class);
-			user.setAddresses(List.of(address));
+			ArrayList<Address> list = new ArrayList<>();
+			list.add(address);
+			user.setAddresses(list);
 		}
 
 		return user;
@@ -104,7 +108,6 @@ public class UserServiceImpl implements UserService {
 							AddressDTO.class
 					)
 			);
-			System.out.println(user);
 
 			return userDTO;
 
@@ -116,6 +119,7 @@ public class UserServiceImpl implements UserService {
 			);
 		}
 	}
+
 
 
 	@Override

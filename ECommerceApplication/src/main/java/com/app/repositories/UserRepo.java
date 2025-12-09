@@ -3,6 +3,7 @@ package com.app.repositories;
 import java.util.List;
 import java.util.Optional;
 
+import jakarta.validation.constraints.Email;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -16,4 +17,6 @@ public interface UserRepo extends JpaRepository<User, Long> {
 	List<User> findByAddress(Long addressId);
 	
 	Optional<User> findByEmail(String email);
+
+	Optional<User> getUserByEmail(@Email String email);
 }

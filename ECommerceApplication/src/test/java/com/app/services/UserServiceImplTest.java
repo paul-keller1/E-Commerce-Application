@@ -84,7 +84,7 @@ public class UserServiceImplTest {
         // Product
         product = new Product();
         product.setProductId(100L);
-        product.setProductName("Product");
+        product.setName("Product");
         product.setSpecialPrice(200.0);
         product.setDiscount(5);
         product.setQuantity(10);

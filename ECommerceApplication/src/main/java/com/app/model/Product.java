@@ -33,7 +33,7 @@ public class Product {
 
 	@NotBlank
 	@Size(min = 3, message = "Product name must contain atleast 3 characters")
-	private String productName;
+	private String Name;
 	
 	private String image;
 	

@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.app.exceptions.UserNotFoundException;
 import com.app.payloads.LoginCredentials;
 import com.app.payloads.UserDTO;
-import com.app.security.JWTUtil;
+import com.app.security.JWTService;
 import com.app.services.UserService;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -34,7 +34,7 @@ public class AuthController {
 	private UserService userService;
 
 	@Autowired
-	private JWTUtil jwtUtil;
+	private JWTService jwtService;
 
 	@Autowired
 	private AuthenticationManager authenticationManager;
@@ -50,7 +50,7 @@ public class AuthController {
 
 		UserDTO userDTO = userService.registerUser(user);
 
-		String token = jwtUtil.generateToken(userDTO.getEmail());
+		String token = jwtService.generateToken(userDTO.getEmail());
 		Map<String, Object> response = new HashMap<>();
 		response.put("token", token);
 		response.put("user", userDTO);
@@ -66,7 +66,8 @@ public class AuthController {
 
 		authenticationManager.authenticate(authCredentials);
 
-		String token = jwtUtil.generateToken(credentials.getEmail());
+		String token = jwtService.generateToken(credentials.getEmail());
+
 
 		return Collections.singletonMap("jwt-token", token);
 	}

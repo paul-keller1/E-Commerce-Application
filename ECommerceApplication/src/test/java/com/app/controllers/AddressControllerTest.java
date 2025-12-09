@@ -3,7 +3,7 @@ package com.app.controllers;
 
 import com.app.config.SecurityConfig;
 import com.app.security.JWTFilter;
-import com.app.security.JWTUtil;
+import com.app.security.JWTService;
 import com.app.services.AddressService;
 import com.app.model.User;
 import com.app.services.UserService;
@@ -22,7 +22,7 @@ public class AddressControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private JWTUtil jwtUtil;
+    private JWTService jwtService;
 
     @MockBean
     private JWTFilter jwtFilter;

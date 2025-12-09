@@ -100,7 +100,7 @@ public class OrderServiceImplTest {
 
         product = new Product();
         product.setProductId(10L);
-        product.setProductName("Test Product");
+        product.setName("Test Product");
         product.setSpecialPrice(100.0);
         product.setDiscount(10);
         product.setQuantity(10);

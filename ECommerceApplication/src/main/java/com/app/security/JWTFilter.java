@@ -2,10 +2,13 @@ package com.app.security;
 
 import java.io.IOException;
 
+
+import org.springframework.context.ApplicationContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -21,40 +24,37 @@ import jakarta.servlet.http.HttpServletResponse;
 public class JWTFilter extends OncePerRequestFilter {
 
 	@Autowired
-	private JWTUtil jwtUtil;
+	private JWTService jwtService;
+
 
 	@Autowired
-	private UserDetailsServiceImpl userDetailsServiceImpl;
+	private ApplicationContext context;
+
+
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 
 		String authHeader = request.getHeader("Authorization");
+		String token = null;
+		String email = null;
 
-		if (authHeader != null && !authHeader.isBlank() && authHeader.startsWith("Bearer ")) {
-			String jwt = authHeader.substring(7);
+		if (authHeader != null && authHeader.startsWith("Bearer ")) {
+			token = authHeader.substring(7);
+			email = jwtService.extractUserName(token);
+		}
 
-			if (jwt == null || jwt.isBlank()) {
-				response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invlaid JWT token in Bearer Header");
-			} else {
-				try {
-					String email = jwtUtil.validateTokenAndRetrieveSubject(jwt);
-
-					UserDetails userDetails = userDetailsServiceImpl.loadUserByUsername(email);
-
-					UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = 
-							new UsernamePasswordAuthenticationToken(email, userDetails.getPassword(), userDetails.getAuthorities());
-
-					if (SecurityContextHolder.getContext().getAuthentication() == null) {
-						SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
-					}
-				} catch (JWTVerificationException e) {
-					response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid JWT Token");
-				}
+		if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+			UserDetails userDetails = context.getBean(UserDetailsServiceImpl.class).loadUserByUsername(email);
+			if (jwtService.validateToken(token, userDetails)) {
+				UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+				authToken.setDetails(new WebAuthenticationDetailsSource()
+						.buildDetails(request));
+				SecurityContextHolder.getContext().setAuthentication(authToken);
 			}
 		}
-		
+
 		filterChain.doFilter(request, response);
 	}
 }

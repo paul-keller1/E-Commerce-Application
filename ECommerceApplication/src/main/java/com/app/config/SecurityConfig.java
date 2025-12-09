@@ -8,7 +8,10 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.Customizer;
+
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,28 +37,21 @@ public class SecurityConfig {
 	
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		http
-			.csrf()
-			.disable()
-			.authorizeHttpRequests()
-			.requestMatchers(AppConstants.PUBLIC_URLS).permitAll()
-			.requestMatchers(AppConstants.USER_URLS).hasAnyAuthority("USER", "ADMIN")
-			.requestMatchers(AppConstants.ADMIN_URLS).hasAuthority("ADMIN")
-			.anyRequest()
-			.authenticated()
-			.and()
-			.exceptionHandling().authenticationEntryPoint(
-					(request, response, authException) -> 
-						response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
-			.and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);	
+		return http
+			.csrf(AbstractHttpConfigurer::disable)
+				.authorizeHttpRequests(auth -> auth
+						.requestMatchers(AppConstants.PUBLIC_URLS).permitAll()
+						.requestMatchers(AppConstants.USER_URLS).hasAnyAuthority("USER", "ADMIN")
+						.requestMatchers(AppConstants.ADMIN_URLS).hasAuthority("ADMIN")
+						.anyRequest().authenticated()
+				)
+				.httpBasic(Customizer.withDefaults()).
+				sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+				.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+				.build();
+
 		
-		http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-		
-		http.authenticationProvider(daoAuthenticationProvider());
-		
-		DefaultSecurityFilterChain defaultSecurityFilterChain = http.build();
-		
-		return defaultSecurityFilterChain;
+
 	}
 
 	@Bean

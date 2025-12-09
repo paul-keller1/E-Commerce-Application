@@ -24,16 +24,16 @@ public class User {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long userId;
 
-	@Size(min = 5, max = 20, message = "First Name must be between 5 and 30 characters long")
-	@Pattern(regexp = "^[a-zA-Z]*$", message = "First Name must not contain numbers or special characters")
+	@Size(min = 1, max = 30, message = "First Name must be between 1 and 30 characters long")
+	@Pattern(regexp = "^(?!.*\\d).+$", message = "First Name must not contain numbers or special characters")
 	private String firstName;
 
-	@Size(min = 5, max = 20, message = "Last Name must be between 5 and 30 characters long")
-	@Pattern(regexp = "^[a-zA-Z]*$", message = "Last Name must not contain numbers or special characters")
+	@Size(min = 1, max = 30, message = "Last Name must be between 1 and 30 characters long")
+	@Pattern(regexp = "^(?!.*\\d).+$", message = "Last Name must not contain numbers ")
 	private String lastName;
 
-	@Size(min = 10, max = 10, message = "Mobile Number must be exactly 10 digits long")
-	@Pattern(regexp = "^\\d{10}$", message = "Mobile Number must contain only Numbers")
+	@Size(min = 10, max = 15, message = "Mobile Number must be  10 to 15 digits long and can start with +")
+	@Pattern(regexp = "^\\+?\\d*$", message = "Mobile Number must contain only Numbers")
 	private String mobileNumber;
 
 	@Email
@@ -44,7 +44,7 @@ public class User {
 
 
 	@ElementCollection(targetClass = Role.class, fetch = FetchType.EAGER)
-	@CollectionTable(name = "Userx_UserxRole")
+	@CollectionTable(name = "user_role")
 	@Enumerated(EnumType.STRING)
 	private Set<Role> roles;
 
@@ -55,6 +55,9 @@ public class User {
 
 	@OneToOne(mappedBy = "user", cascade = { CascadeType.PERSIST, CascadeType.MERGE }, orphanRemoval = true)
 	private Cart cart;
+
+
+
 
 	@Override
 	public int hashCode() {

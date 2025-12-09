@@ -7,9 +7,12 @@ import org.springframework.stereotype.Repository;
 
 import com.app.model.Product;
 
+import java.util.List;
+
 @Repository
 public interface ProductRepo extends JpaRepository<Product, Long> {
 
-	Page<Product> findByProductNameLike(String keyword, Pageable pageDetails);
+	Page<Product> findByNameLike(String keyword, Pageable pageDetails);
+
 
 }

@@ -19,7 +19,6 @@ public class UserCreateDTO {
     private String mobileNumber;
     private String email;
     private String password;
-    private Set<Role> roles;
     private AddressDTO address;
 }
 
