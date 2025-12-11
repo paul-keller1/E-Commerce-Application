@@ -1,11 +1,11 @@
-package com.app.services;
+package com.app.service;
 
 import com.app.model.Category;
 import com.app.model.Product;
-import com.app.exceptions.APIException;
-import com.app.payloads.CategoryDTO;
-import com.app.payloads.CategoryResponse;
-import com.app.repositories.CategoryRepo;
+import com.app.exception.APIException;
+import com.app.dto.CategoryDTO;
+import com.app.dto.CategoryResponse;
+import com.app.repository.CategoryRepo;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
