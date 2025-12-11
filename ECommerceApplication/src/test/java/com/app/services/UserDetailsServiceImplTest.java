@@ -3,9 +3,12 @@ package com.app.services;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import com.app.exceptions.APIException;
+import com.app.model.Role;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,6 +44,7 @@ public class UserDetailsServiceImplTest {
         user.setEmail("test@test.com");
         user.setPassword("password");
         user.setMobileNumber("1234567890");
+        user.setRoles(Set.of(Role.USER));
     }
 
     @AfterEach

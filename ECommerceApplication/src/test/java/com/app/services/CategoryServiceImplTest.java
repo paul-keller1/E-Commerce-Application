@@ -69,7 +69,7 @@ public class CategoryServiceImplTest {
 
     @Test
     void createCategoryTest_SUCCESS() {
-        when(categoryRepo.findByCategoryName(category.getCategoryName())).thenReturn(null);
+        when(categoryRepo.findByCategoryName(category.getCategoryName())).thenReturn(Optional.empty());
         when(categoryRepo.save(category)).thenReturn(category);
 
         assertEquals(modelMapper.map(category, CategoryDTO.class), categoryService.createCategory(modelMapper.map(category, CategoryDTO.class)));
@@ -89,8 +89,9 @@ public class CategoryServiceImplTest {
     @Test
     void createCategory_CategoryNameTooShort_ThrowsAPIException() {
         category.setCategoryName("a");
-        when(categoryRepo.findByCategoryName(category.getCategoryName())).thenReturn(null);
-        when(categoryRepo.save(category)).thenThrow(APIException.class);
+        when(categoryRepo.findByCategoryName(category.getCategoryName())).thenReturn(Optional.empty());
+        when(categoryRepo.save(any(Category.class)))
+                .thenThrow(new APIException());
 
         assertThrows(APIException.class, () -> categoryService.createCategory(modelMapper.map(category, CategoryDTO.class)));
     }
@@ -247,7 +248,7 @@ public class CategoryServiceImplTest {
         updateRequest.setCategoryName("New Name");
 
         when(categoryRepo.findById(categoryId)).thenReturn(Optional.of(existingCategory));
-        when(categoryRepo.findByCategoryName(updateRequest.getCategoryName())).thenReturn(null);
+        when(categoryRepo.findByCategoryName(updateRequest.getCategoryName())).thenReturn(Optional.empty());
         when(categoryRepo.save(any(Category.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         CategoryDTO result = categoryService.updateCategory(updateRequest, categoryId);

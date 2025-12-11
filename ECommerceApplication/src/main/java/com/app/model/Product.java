@@ -34,7 +34,9 @@ public class Product {
 	@NotBlank
 	@Size(min = 3, message = "Product name must contain atleast 3 characters")
 	private String Name;
-	
+
+
+
 	private String image;
 	
 	@NotBlank
@@ -69,10 +71,10 @@ public class Product {
 		if (obj == null) {
 			return false;
 		}
-		if (!(obj instanceof OrderItem other)) {
+		if (!(obj instanceof Product other)) {
 			return false;
 		}
-		return Objects.equals(this.getProductId(), other.getOrderItemId());
+		return Objects.equals(this.getProductId(), other.getProductId());
 	}
 
 	@Override

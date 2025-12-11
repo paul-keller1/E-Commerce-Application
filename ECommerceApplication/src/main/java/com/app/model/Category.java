@@ -46,10 +46,10 @@ public class Category {
 		if (obj == null) {
 			return false;
 		}
-		if (!(obj instanceof OrderItem other)) {
+		if (!(obj instanceof Category other)) {
 			return false;
 		}
-		return Objects.equals(this.getCategoryId(), other.getOrderItemId());
+		return Objects.equals(this.getCategoryId(), other.getCategoryId());
 	}
 
 	@Override

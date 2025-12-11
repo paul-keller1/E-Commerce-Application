@@ -47,7 +47,7 @@ public class OrderItem {
 		if (obj == null) {
 			return false;
 		}
-		if (!(obj instanceof OrderItem other)) {
+		if (!(obj instanceof OrderItem  other)) {
 			return false;
 		}
 		return Objects.equals(this.getOrderItemId(), other.getOrderItemId());

@@ -75,10 +75,10 @@ public class Address {
 		if (obj == null) {
 			return false;
 		}
-		if (!(obj instanceof OrderItem other)) {
+		if (!(obj instanceof Address  other)) {
 			return false;
 		}
-		return Objects.equals(this.getAddressId(), other.getOrderItemId());
+		return Objects.equals(this.getAddressId(), other.getAddressId());
 	}
 
 	@Override
