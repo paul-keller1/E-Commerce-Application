@@ -48,10 +48,10 @@ public class CartItem {
 		if (obj == null) {
 			return false;
 		}
-		if (!(obj instanceof OrderItem other)) {
+		if (!(obj instanceof CartItem other)) {
 			return false;
 		}
-		return Objects.equals(this.getCartItemId(), other.getOrderItemId());
+		return Objects.equals(this.getCartItemId(), other.getCartItemId());
 	}
 
 	@Override

@@ -73,7 +73,9 @@ public class ProductServiceImplTest {
         product.setProductId(1L);
         product.setName("Phone");
         product.setDescription("Smartphone");
+        product.setImage("default.png");
         product.setPrice(1000.0);
+        product.setSpecialPrice(900.0);
         product.setDiscount(10); // 10%
         product.setQuantity(5);
     }
@@ -90,8 +92,11 @@ public class ProductServiceImplTest {
         when(productRepo.save(any(Product.class))).thenAnswer(invocation -> {
             Product p = invocation.getArgument(0);
             p.setProductId(product.getProductId());
+            p.setImage(product.getImage());
+            p.setPrice(product.getSpecialPrice());
             return p;
         });
+
 
         ProductDTO result = productService.addProduct(category.getCategoryId(), modelMapper.map(product, ProductDTO.class));
 
@@ -112,9 +117,10 @@ public class ProductServiceImplTest {
         existing.setName(product.getName());
         existing.setDescription(product.getDescription());
 
-        category.getProducts().add(existing);
 
         when(categoryRepo.findById(category.getCategoryId())).thenReturn(Optional.of(category));
+        when(productRepo.findAll()).thenReturn(List.of(product));
+
 
         assertThrows(APIException.class,
                 () -> productService.addProduct(category.getCategoryId(), modelMapper.map(product, ProductDTO.class)));
@@ -183,6 +189,7 @@ public class ProductServiceImplTest {
             when(productRepo.save(any(Product.class))).thenAnswer(i -> {
                 Product p = i.getArgument(0);
                 p.setProductId(10L);
+                p.setName(newProduct.getName());
                 return p;
             });
 
@@ -345,7 +352,7 @@ public class ProductServiceImplTest {
 
         String keyword = "phone";
 
-        when(productRepo.findByNameLike((keyword), any())).thenReturn(emptyPage);
+        when(productRepo.findByNameLike(any(), any())).thenReturn(emptyPage);
 
         APIException ex = assertThrows(
                 APIException.class,
