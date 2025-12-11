@@ -533,4 +533,174 @@ public class ProductServiceImplTest {
 
         verify(productRepo, never()).delete(any(Product.class));
     }
+
+
+    @Test
+    void testGetAllProductsFull_ReturnsAllProducts() {
+        Product p1 = new Product();
+        p1.setProductId(1L);
+        Product p2 = new Product();
+        p2.setProductId(2L);
+
+        List<Product> products = List.of(p1, p2);
+
+        when(productRepo.findAll()).thenReturn(products);
+
+        List<Product> result = productService.getAllProductsFull();
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals(products, result);
+        verify(productRepo, times(1)).findAll();
+    }
+
+    @Test
+    void addProduct_RepoHasProductsButNoDuplicateDescription_SUCCESS() {
+        // Category exists
+        when(categoryRepo.findById(category.getCategoryId()))
+                .thenReturn(Optional.of(category));
+
+        // Existing product in DB with a DIFFERENT description
+        Product existing = new Product();
+        existing.setName("Existing Phone");
+        existing.setDescription("Some other description");
+
+        when(productRepo.findAll()).thenReturn(List.of(existing));
+
+        // Save behavior
+        when(productRepo.save(any(Product.class))).thenAnswer(invocation -> {
+            Product p = invocation.getArgument(0);
+            p.setProductId(42L);
+            return p;
+        });
+
+        ProductDTO dto = modelMapper.map(product, ProductDTO.class);
+        dto.setDescription("Unique description"); // ensure different from existing
+
+        ProductDTO result =
+                productService.addProduct(category.getCategoryId(), dto);
+
+        assertNotNull(result);
+        assertEquals(dto.getName(), result.getName());
+        assertEquals("default.png", result.getImage());
+        verify(productRepo, times(1)).findAll();
+        verify(productRepo, times(1)).save(any(Product.class));
+    }
+
+
+    private Product buildProduct(String description) {
+        Product p = new Product();
+        p.setDescription(description);
+        return p;
+    }
+
+
+
+    private ProductDTO buildProductDTO(String description) {
+        ProductDTO dto = new ProductDTO();
+        dto.setDescription(description);
+        return dto;
+    }
+
+    @Test
+    void addProduct_ShouldIgnoreProductsWithNullDescriptionWhenCheckingDuplicates() {
+        ProductDTO dto = buildProductDTO("unique");
+        when(categoryRepo.findById(anyLong())).thenReturn(Optional.of(category));
+        Product nullDescriptionProduct = buildProduct(null);
+        when(productRepo.findAll()).thenReturn(List.of(nullDescriptionProduct));
+        when(productRepo.save(any(Product.class))).thenAnswer(inv -> {
+            Product p = inv.getArgument(0);
+            p.setProductId(77L);
+            return p;
+        });
+
+        ProductDTO result = productService.addProduct(1L, dto);
+
+        assertEquals("unique", result.getDescription());
+    }
+
+
+    @Test
+    void addProduct_WhenProductsNull_UsesInMemoryProducts() {
+        ProductDTO dto = buildProductDTO("Unique desc");
+
+        when(categoryRepo.findById(anyLong())).thenReturn(Optional.of(category));
+        when(productRepo.findAll()).thenReturn(null);
+
+        List<Product> inMemoryProducts = new ArrayList<>();
+        inMemoryProducts.add(buildProduct("Other desc"));
+
+        ReflectionTestUtils.setField(productService, "inMemoryProducts", inMemoryProducts);
+        when(productRepo.save(any(Product.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        productService.addProduct(1L, dto);
+
+        verify(productRepo).save(any(Product.class));
+    }
+
+    @Test
+    void addProduct_WhenRepoEmptyFallsBackToInMemoryAndDetectsDuplicate() {
+        ProductDTO dto = buildProductDTO("dup-desc");
+        when(categoryRepo.findById(anyLong())).thenReturn(Optional.of(category));
+        when(productRepo.findAll()).thenReturn(Collections.emptyList());
+
+        List<Product> inMemoryProducts = new ArrayList<>();
+        inMemoryProducts.add(buildProduct("dup-desc"));
+        ReflectionTestUtils.setField(productService, "inMemoryProducts", inMemoryProducts);
+
+        assertThrows(APIException.class, () -> productService.addProduct(1L, dto));
+        verify(productRepo, never()).save(any());
+    }
+
+    @Test
+    void addProduct_WhenRepoEmptyFallsBackToInMemoryAndSavesUnique() {
+        ProductDTO dto = buildProductDTO("unique-desc");
+        when(categoryRepo.findById(anyLong())).thenReturn(Optional.of(category));
+        when(productRepo.findAll()).thenReturn(Collections.emptyList());
+        when(productRepo.save(any(Product.class))).thenAnswer(inv -> {
+            Product p = inv.getArgument(0);
+            p.setProductId(55L);
+            return p;
+        });
+
+        List<Product> inMemoryProducts = new ArrayList<>();
+        inMemoryProducts.add(buildProduct("other-desc"));
+        ReflectionTestUtils.setField(productService, "inMemoryProducts", inMemoryProducts);
+
+        ProductDTO saved = productService.addProduct(1L, dto);
+
+        assertEquals(dto.getDescription(), saved.getDescription());
+        verify(productRepo).save(any(Product.class));
+    }
+
+    @Test
+    void addProduct_WhenDuplicateDescriptionExists_ShouldThrowApiException() {
+        ProductDTO dto = buildProductDTO("SAME");
+
+        when(categoryRepo.findById(anyLong())).thenReturn(Optional.of(category));
+
+        List<Product> productsFromDb = List.of(buildProduct("SAME"));
+        when(productRepo.findAll()).thenReturn(productsFromDb);
+
+        assertThrows(APIException.class, () -> productService.addProduct(1L, dto));
+    }
+
+    @Test
+    void addProduct_WhenNoDuplicateDescription_ShouldSave() {
+        ProductDTO dto = buildProductDTO("New description");
+
+        when(categoryRepo.findById(anyLong())).thenReturn(Optional.of(category));
+
+        List<Product> productsFromDb = List.of(buildProduct("Old description"));
+        when(productRepo.findAll()).thenReturn(productsFromDb);
+        when(productRepo.save(any(Product.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        productService.addProduct(1L, dto);
+
+        verify(productRepo).save(any(Product.class));
+    }
+
+
+
+
 }
