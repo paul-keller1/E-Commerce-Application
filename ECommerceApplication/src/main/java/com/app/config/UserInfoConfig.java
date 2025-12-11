@@ -1,9 +1,11 @@
 package com.app.config;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.app.model.Cart;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -55,5 +57,38 @@ public class UserInfoConfig implements UserDetails {
 	public boolean isEnabled() {
 		return true;
 	}
-	
+
+
+
+	@Override
+	public int hashCode() {
+		int hash = 7;
+		hash = 59 * hash + Objects.hashCode(this.getEmail());
+		return hash;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null) {
+			return false;
+		}
+		if (!(obj instanceof Cart other)) {
+			return false;
+		}
+		return Objects.equals(this.getEmail(), other.getCartId());
+	}
+
+	@Override
+	public String toString() {
+		return "id=" + email;
+	}
+
+
+
+
+
+
+
+
+
 }
