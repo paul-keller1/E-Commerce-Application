@@ -71,10 +71,10 @@ public class User {
 		if (obj == null) {
 			return false;
 		}
-		if (!(obj instanceof OrderItem other)) {
+		if (!(obj instanceof User other)) {
 			return false;
 		}
-		return Objects.equals(this.getUserId(), other.getOrderItemId());
+		return Objects.equals(this.getUserId(), other.getUserId());
 	}
 
 	@Override
