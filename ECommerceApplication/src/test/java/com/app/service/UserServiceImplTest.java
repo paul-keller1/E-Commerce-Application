@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import com.app.model.*;
 import com.app.dto.UserCreateDTO;
@@ -33,6 +34,7 @@ import com.app.dto.UserDTO;
 import com.app.dto.UserResponse;
 import com.app.repository.AddressRepo;
 import com.app.repository.UserRepo;
+import org.springframework.test.util.ReflectionTestUtils;
 
 public class UserServiceImplTest {
 
@@ -300,6 +302,52 @@ public class UserServiceImplTest {
         assertEquals(userCreateDTO.getEmail(), result.getEmail());
         assertTrue(result.getRoles().contains(Role.ADMIN));
         assertTrue(result.getRoles().contains(Role.USER));
+    }
+
+    @Test
+    void registerUser_ShouldWrapDataIntegrityViolation() {
+        UserCreateDTO userCreateDTO = new UserCreateDTO();
+        userCreateDTO.setFirstName("Data");
+        userCreateDTO.setLastName("Violation");
+        userCreateDTO.setEmail("data@test.com");
+        userCreateDTO.setMobileNumber("1231231234");
+        userCreateDTO.setPassword("pwd");
+        AddressDTO addressDTO = new AddressDTO(1L, "Street", "Building", "City", "State", "Country", "12345");
+        userCreateDTO.setAddress(addressDTO);
+
+        when(addressRepo.findByCountryAndStateAndCityAndPincodeAndStreetAndBuildingName(
+                anyString(), anyString(), anyString(), anyString(), anyString(), anyString()
+        )).thenReturn(address);
+        when(userRepo.save(any(User.class))).thenThrow(new DataIntegrityViolationException("dup"));
+
+        APIException apiException = assertThrows(APIException.class, () -> userService.registerUser(userCreateDTO));
+        assertTrue(apiException.getMessage().contains("data@test.com"));
+    }
+
+    @Test
+    void registerUser_NullInputStillWrappedInApiException() {
+        doThrow(new DataIntegrityViolationException("fail"))
+                .when(modelMapper).map(null, User.class);
+
+        APIException ex = assertThrows(APIException.class, () -> userService.registerUser(null));
+        assertTrue(ex.getMessage().contains("null"));
+    }
+
+    @Test
+    void toUserShouldHandleNullAddress() {
+        UserCreateDTO dto = new UserCreateDTO();
+        dto.setFirstName("NoAddr");
+        dto.setLastName("User");
+        dto.setEmail("noaddr@test.com");
+        dto.setPassword("pwd");
+        dto.setMobileNumber("123");
+        dto.setAddress(null);
+
+        User userResult = ReflectionTestUtils.invokeMethod(userService, "toUser", dto, Set.of(Role.USER));
+
+        assertNotNull(userResult);
+        assertTrue(userResult.getAddresses() == null || userResult.getAddresses().isEmpty());
+        assertNull(userResult.getCart());
     }
 
     // ---------------------------------------------------------

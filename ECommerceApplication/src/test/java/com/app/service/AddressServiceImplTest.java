@@ -216,4 +216,39 @@ class AddressServiceImplTest {
 
         assertThrows(ResourceNotFoundException.class, () -> addressService.deleteAddress(1L));
     }
+
+
+    @Test
+    void updateAddress_AddressNotFound_ThrowsAPIException() {
+        Long addressId = 1L;
+
+        Address address = new Address();
+        address.setCountry("Country");
+        address.setState("State");
+        address.setCity("City");
+        address.setPincode("12345");
+        address.setStreet("Street");
+        address.setBuildingName("Building");
+
+        // 1) No existing address with same full data (first query returns null)
+        when(addressRepo.findByCountryAndStateAndCityAndPincodeAndStreetAndBuildingName(
+                anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(null);
+
+        // 2) No address by ID either → triggers orElseThrow
+        when(addressRepo.findById(addressId)).thenReturn(Optional.empty());
+
+        APIException ex = assertThrows(
+                APIException.class,
+                () -> addressService.updateAddress(addressId, address)
+        );
+
+        assertTrue(ex.getMessage().contains("Address with addressId" + addressId + "not found"));
+
+        verify(addressRepo).findByCountryAndStateAndCityAndPincodeAndStreetAndBuildingName(
+                anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
+        verify(addressRepo).findById(addressId);
+        verify(addressRepo, never()).save(any(Address.class));
+    }
+
 }

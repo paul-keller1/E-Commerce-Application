@@ -80,7 +80,7 @@ public class AddressServiceImpl implements AddressService {
 
 		if (addressFromDB == null) {
 			addressFromDB = addressRepo.findById(addressId)
-					.orElseThrow(() -> new ResourceNotFoundException("Address", "addressId", addressId));
+					.orElseThrow(() -> new APIException("Address with addressId" +  addressId + "not found"));
 
 			addressFromDB.setCountry(address.getCountry());
 			addressFromDB.setState(address.getState());
