@@ -16,9 +16,12 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 @Entity
 @Table(name = "orders")
@@ -32,6 +35,7 @@ public class Order {
 	private Long orderId;
 	
 	@Email
+	@NotBlank
 	@Column(nullable = false)
 	private String email;
 
@@ -55,15 +59,17 @@ public class Order {
 		return hash;
 	}
 
+
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == null) {
 			return false;
 		}
-		if (!(obj instanceof OrderItem other)) {
+		if (!(obj instanceof Order  other)) {
 			return false;
 		}
-		return Objects.equals(this.getOrderId(), other.getOrderItemId());
+		return Objects.equals(this.getOrderId(), other.getOrderId());
 	}
 
 	@Override

@@ -1,11 +1,11 @@
-package com.app.service;
+package com.app.services;
 
 import com.app.model.Category;
 import com.app.model.Product;
-import com.app.exception.APIException;
-import com.app.dto.CategoryDTO;
-import com.app.dto.CategoryResponse;
-import com.app.repository.CategoryRepo;
+import com.app.exceptions.APIException;
+import com.app.payloads.CategoryDTO;
+import com.app.payloads.CategoryResponse;
+import com.app.repositories.CategoryRepo;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -90,7 +90,8 @@ public class CategoryServiceImplTest {
     void createCategory_CategoryNameTooShort_ThrowsAPIException() {
         category.setCategoryName("a");
         when(categoryRepo.findByCategoryName(category.getCategoryName())).thenReturn(Optional.empty());
-        when(categoryRepo.save(any(Category.class))).thenThrow(APIException.class);
+        when(categoryRepo.save(any(Category.class)))
+                .thenThrow(new APIException());
 
         assertThrows(APIException.class, () -> categoryService.createCategory(modelMapper.map(category, CategoryDTO.class)));
     }

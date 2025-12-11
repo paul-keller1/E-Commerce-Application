@@ -46,10 +46,10 @@ public class Payment {
 		if (obj == null) {
 			return false;
 		}
-		if (!(obj instanceof OrderItem other)) {
+		if (!(obj instanceof Payment  other)) {
 			return false;
 		}
-		return Objects.equals(this.getPaymentId(), other.getOrderItemId());
+		return Objects.equals(this.getPaymentId(), other.getPaymentId());
 	}
 
 	@Override
