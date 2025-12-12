@@ -22,12 +22,14 @@ import lombok.NoArgsConstructor;
 public class UserInfoConfig implements UserDetails {
 
 	private static final long serialVersionUID = 1L;
-	
+
+	private Long userId;
 	private String email;
 	private String password;
 	private Set<GrantedAuthority> authorities;
 	
 	public UserInfoConfig(User user) {
+		this.userId = user.getUserId();
 		this.email = user.getEmail();
 		this.password = user.getPassword();
 		this.authorities = user.getRoles().stream().map(role -> new SimpleGrantedAuthority(role.getAuthority())).collect(Collectors.toSet());

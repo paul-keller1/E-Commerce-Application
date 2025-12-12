@@ -32,9 +32,9 @@ class CartContollerTest {
 
     @Test
     void addProductToCart_ShouldReturnCreatedCart() {
-        when(cartService.addProductToCart(1L, 2L, 3)).thenReturn(cartDTO);
+        when(cartService.addProductToCart( 2L, 3)).thenReturn(cartDTO);
 
-        ResponseEntity<CartDTO> response = cartController.addProductToCart(1L, 2L, 3);
+        ResponseEntity<CartDTO> response = cartController.addProductToCart( 2L, 3);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(cartDTO, response.getBody());

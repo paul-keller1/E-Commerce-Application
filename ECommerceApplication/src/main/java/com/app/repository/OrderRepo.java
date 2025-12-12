@@ -11,7 +11,7 @@ import com.app.model.Order;
 @Repository
 public interface OrderRepo extends JpaRepository<Order, Long> {
 	
-	@Query("SELECT o FROM Order o WHERE o.email = ?1 AND o.id = ?2")
+	@Query("SELECT o FROM Order o WHERE o.email = ?1 AND o.orderId = ?2")
 	Order findOrderByEmailAndOrderId(String email, Long cartId);
 
 	List<Order> findAllByEmail(String emailId);

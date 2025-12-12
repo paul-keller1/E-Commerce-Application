@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import com.app.config.UserInfoConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Spy;
@@ -24,6 +25,8 @@ import com.app.dto.CartDTO;
 import com.app.repository.CartItemRepo;
 import com.app.repository.CartRepo;
 import com.app.repository.ProductRepo;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 public class CartServiceImplTest {
 
@@ -71,6 +74,15 @@ public class CartServiceImplTest {
         cartItem.setProductPrice(100.0);
 
         cart.setCartItems(List.of(cartItem));
+
+
+        var principal = new UserInfoConfig();
+        principal.setUserId(1L);
+        principal.setEmail("user@app.com");
+
+        var auth = new UsernamePasswordAuthenticationToken(principal, null, List.of());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
     }
 
     // ---------------------------------------------------------
@@ -79,11 +91,11 @@ public class CartServiceImplTest {
 
     @Test
     void testAddProductToCart_Success() {
-        when(cartRepo.findById(cart.getCartId())).thenReturn(Optional.of(cart));
+        when(cartRepo.findCartByUserId(anyLong())).thenReturn(Optional.of(cart));
         when(productRepo.findById(product.getProductId())).thenReturn(Optional.of(product));
         when(cartItemRepo.findCartItemByProductIdAndCartId(cart.getCartId(), product.getProductId())).thenReturn(Optional.empty());
 
-        CartDTO result = cartService.addProductToCart(cart.getCartId(), product.getProductId(), 2);
+        CartDTO result = cartService.addProductToCart(product.getProductId(), 2);
 
         assertEquals(200.0, result.getTotalPrice());
         assertEquals(8, product.getQuantity()); // 10 - 2
@@ -92,58 +104,57 @@ public class CartServiceImplTest {
 
     @Test
     void testAddProductToCart_ProductAlreadyInCart() {
-        when(cartRepo.findById(cart.getCartId())).thenReturn(Optional.of(cart));
+        when(cartRepo.findCartByUserId(anyLong())).thenReturn(Optional.of(cart));
         when(productRepo.findById(product.getProductId())).thenReturn(Optional.of(product));
         when(cartItemRepo.findCartItemByProductIdAndCartId(cart.getCartId(), product.getProductId())).thenReturn(Optional.ofNullable(cartItem));
 
-        assertThrows(APIException.class, () -> cartService.addProductToCart(cart.getCartId(), product.getProductId(), 1));
+        assertThrows(APIException.class, () -> cartService.addProductToCart(product.getProductId(), 1));
     }
 
     @Test
     void testAddProductToCart_ProductOutOfStock() {
         product.setQuantity(0);
 
-        when(cartRepo.findById(cart.getCartId())).thenReturn(Optional.of(cart));
+        when(cartRepo.findCartByUserId(anyLong())).thenReturn(Optional.of(cart));
         when(productRepo.findById(product.getProductId())).thenReturn(Optional.of(product));
 
 
-        assertThrows(APIException.class, () -> cartService.addProductToCart(cart.getCartId(), product.getProductId(), 1));
+        assertThrows(APIException.class, () -> cartService.addProductToCart(product.getProductId(), 1));
     }
 
     @Test
     void testAddProductToCart_QuantityTooHigh(){
 
-        when(cartRepo.findById(cart.getCartId())).thenReturn(Optional.of(cart));
+        when(cartRepo.findCartByUserId(anyLong())).thenReturn(Optional.of(cart));
         when(productRepo.findById(product.getProductId())).thenReturn(Optional.of(product));
         when(cartItemRepo.findCartItemByProductIdAndCartId(cart.getCartId(), product.getProductId())).thenReturn(Optional.empty());
 
 
-        assertThrows(APIException.class, () -> cartService.addProductToCart(cart.getCartId(), product.getProductId(), 11));
+        assertThrows(APIException.class, () -> cartService.addProductToCart(product.getProductId(), 11));
     }
 
     @Test
     void testAddProductToCart_CartNotFound() {
-        when(cartRepo.findById(cart.getCartId())).thenReturn(Optional.empty());
+        when(cartRepo.findCartByUserId(anyLong())).thenReturn(Optional.empty());
 
         APIException ex = assertThrows(
                 APIException.class,
-                () -> cartService.addProductToCart(cart.getCartId(), product.getProductId(), 1)
+                () -> cartService.addProductToCart(product.getProductId(), 1)
         );
 
         String msg = ex.getMessage();
-        assertTrue(msg.contains("Cart with cartId"));
-        assertTrue(msg.contains("was not found!!!"));
+        assertEquals(msg, "Cart for current user was not found!!!");
     }
 
 
     @Test
     void testAddProductToCart_ProductNotFoundById() {
-        when(cartRepo.findById(cart.getCartId())).thenReturn(Optional.of(cart));
+        when(cartRepo.findCartByUserId(anyLong())).thenReturn(Optional.of(cart));
         when(productRepo.findById(product.getProductId())).thenReturn(Optional.empty());
 
         APIException ex = assertThrows(
                 APIException.class,
-                () -> cartService.addProductToCart(cart.getCartId(), product.getProductId(), 1)
+                () -> cartService.addProductToCart(product.getProductId(), 1)
         );
 
         String expected = "Product with productId" + product.getProductId() + "was not found!!!";

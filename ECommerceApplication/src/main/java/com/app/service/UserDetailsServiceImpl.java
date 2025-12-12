@@ -20,7 +20,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 	private UserRepo userRepo;
 
 
-	//TODO: maybe i should change sth about the way tokens return emails instead of usernames, loadUserByUsername is from a remote interface
 	@Override
 	public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 		Optional<User> user = userRepo.findByEmail(email);

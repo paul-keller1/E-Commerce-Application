@@ -3,8 +3,10 @@ package com.app.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.app.config.UserInfoConfig;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.app.model.Cart;
@@ -38,16 +40,24 @@ public class CartServiceImpl implements CartService {
 	@Autowired
 	private ModelMapper modelMapper;
 
-	@Override
-	public CartDTO addProductToCart(Long cartId, Long productId, Integer quantity) {
 
-		Cart cart = cartRepo.findById(cartId)
-				.orElseThrow(() -> new APIException("Cart with cartId" +  cartId + "was not found!!!"));
+
+	@Override
+	public CartDTO addProductToCart(Long productId, Integer quantity) {
+
+		Long userId = ((UserInfoConfig) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUserId();
+		if(userId < 1) {
+			throw new SecurityException("current user is not stored correctly");
+		}
+
+
+		Cart cart = cartRepo.findCartByUserId(userId)
+				.orElseThrow(() -> new APIException("Cart for current user was not found!!!"));
 
 		Product product = productRepo.findById(productId)
 				.orElseThrow(() -> new APIException("Product with productId" + productId + "was not found!!!"));
 
-		Optional<CartItem>  cartItem = cartItemRepo.findCartItemByProductIdAndCartId(cartId, productId);
+		Optional<CartItem>  cartItem = cartItemRepo.findCartItemByProductIdAndCartId(cart.getCartId(), productId);
 
 		if (cartItem.isPresent()) {
 			throw new APIException("Product " + product.getName() + " already exists in the cart!!!");

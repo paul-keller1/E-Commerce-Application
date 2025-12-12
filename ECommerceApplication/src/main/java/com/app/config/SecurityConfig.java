@@ -1,6 +1,10 @@
 package com.app.config;
 
+import com.app.model.Role;
+import com.app.model.User;
+import com.app.repository.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,6 +25,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import com.app.security.JWTFilter;
 import com.app.service.UserDetailsServiceImpl;
+
+import java.util.Set;
 
 @Configuration
 @EnableWebSecurity
@@ -43,8 +49,9 @@ public class SecurityConfig {
 						.requestMatchers(AppConstants.ADMIN_URLS).hasAuthority("ADMIN")
 						.anyRequest().authenticated()
 				)
-				.httpBasic(Customizer.withDefaults()).
-				sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+				.httpBasic(AbstractHttpConfigurer::disable)
+				.formLogin(AbstractHttpConfigurer::disable)
+				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
 				.build();
 
@@ -64,7 +71,21 @@ public class SecurityConfig {
 
 	@Bean
 	public PasswordEncoder passwordEncoder() {
-		return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+		return new BCryptPasswordEncoder();
+	}
+
+	@Bean
+	CommandLineRunner seedUsers(UserRepo userRepo, PasswordEncoder encoder) {
+		return args -> {
+			System.out.println(">>> seeding users...");
+			if (userRepo.findByEmail("admin@app.com").isEmpty()) {
+				User u = new User();
+				u.setEmail("admin@app.com");
+				u.setPassword(encoder.encode("admin123")); // <-- known password
+				u.setRoles(Set.of(Role.ADMIN));
+				userRepo.save(u);
+			}
+		};
 	}
 
 	@Bean

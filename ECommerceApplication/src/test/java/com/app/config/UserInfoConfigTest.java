@@ -41,7 +41,7 @@ class UserInfoConfigTest {
                 Set.of(new SimpleGrantedAuthority("ROLE_USER"));
 
         UserInfoConfig userInfo =
-                new UserInfoConfig("user@example.com", "password", authorities);
+                new UserInfoConfig(1L, "user@example.com", "password", authorities);
 
         assertEquals("user@example.com", userInfo.getUsername());
         assertEquals("password", userInfo.getPassword());
@@ -79,7 +79,7 @@ class UserInfoConfigTest {
         Set<GrantedAuthority> authorities =
                 Set.of(new SimpleGrantedAuthority("ROLE_USER"));
 
-        UserInfoConfig u1 = new UserInfoConfig("user@example.com", "password", authorities);
+        UserInfoConfig u1 = new UserInfoConfig(1L, "user@example.com", "password", authorities);
 
         int hash1 = u1.hashCode();
         int hash2 = u1.hashCode();
