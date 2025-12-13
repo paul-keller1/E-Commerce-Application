@@ -39,14 +39,14 @@ public class UserController {
 		return new ResponseEntity<UserResponse>(userResponse, HttpStatus.FOUND);
 	}
 	
-	@GetMapping("/user/users/{userId}")
+	@GetMapping("/admin/users/{userId}")
 	public ResponseEntity<UserDTO> getUser(@PathVariable Long userId) {
 		UserDTO user = userService.getUserById(userId);
 		
 		return new ResponseEntity<UserDTO>(user, HttpStatus.FOUND);
 	}
 	
-	@PutMapping("/user/users/{userId}")
+	@PutMapping("/admin/users/{userId}")
 	public ResponseEntity<UserDTO> updateUser(@RequestBody UserDTO userDTO, @PathVariable Long userId) {
 		UserDTO updatedUser = userService.updateUser(userId, userDTO);
 		

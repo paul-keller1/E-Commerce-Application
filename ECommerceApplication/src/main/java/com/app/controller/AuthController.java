@@ -48,7 +48,7 @@ public class AuthController {
 	@Value("${admin.register.secret}")
 	private String adminRegisterSecret;
 
-	@PostMapping("/register")
+	@PostMapping("/register/user")
 	public ResponseEntity<Map<String, Object>> registerHandler(@Valid @RequestBody UserCreateDTO user) throws UserNotFoundException {
 		String encodedPass = passwordEncoder.encode(user.getPassword());
 
@@ -58,11 +58,13 @@ public class AuthController {
 
 		String token = jwtService.generateToken(userDTO.getEmail());
 		Map<String, Object> response = new HashMap<>();
-		response.put("token", token);
 		response.put("user", userDTO);
+		response.put("token", token);
 
 		return new ResponseEntity<>(response, HttpStatus.CREATED);
 	}
+
+
 
 	@PostMapping("/register/admin")
 	public ResponseEntity<Map<String, Object>> registerAdminHandler(
@@ -80,8 +82,8 @@ public class AuthController {
 
 		String token = jwtService.generateToken(userDTO.getEmail());
 		Map<String, Object> response = new HashMap<>();
-		response.put("token", token);
 		response.put("user", userDTO);
+		response.put("token", token);
 
 		return new ResponseEntity<>(response, HttpStatus.CREATED);
 	}

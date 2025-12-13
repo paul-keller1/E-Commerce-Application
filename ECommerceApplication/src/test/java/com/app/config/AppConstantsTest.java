@@ -20,13 +20,13 @@ class AppConstantsTest {
         assertEquals("asc", AppConstants.SORT_DIR);
         assertEquals(101L, AppConstants.ADMIN_ID);
         assertEquals(102L, AppConstants.USER_ID);
-        assertEquals(5 * 60 * 1000, AppConstants.JWT_TOKEN_VALIDITY);
+        assertEquals(10 * 60 * 1000, AppConstants.JWT_TOKEN_VALIDITY);
     }
 
     @Test
     void urlArraysShouldMatchConfiguration() {
         assertArrayEquals(
-                new String[]{"/v3/api-docs/**", "/swagger-ui/**", "/api/register", "/api/register/admin", "/api/login"},
+                new String[]{ "/v3/api-docs/**", "/swagger-ui/**", "/api/register/**", "/api/login" },
                 AppConstants.PUBLIC_URLS
         );
         assertArrayEquals(new String[]{"/api/user/**"}, AppConstants.USER_URLS);

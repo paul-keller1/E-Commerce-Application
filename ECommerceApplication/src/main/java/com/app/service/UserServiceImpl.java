@@ -33,7 +33,6 @@ public class UserServiceImpl implements UserService {
 	private UserRepo userRepo;
 
 
-
 	@Autowired
 	private AddressRepo addressRepo;
 
