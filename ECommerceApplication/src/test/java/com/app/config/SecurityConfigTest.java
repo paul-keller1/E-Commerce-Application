@@ -1,12 +1,19 @@
 package com.app.config;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+import com.app.model.Role;
+import com.app.model.User;
+import com.app.repository.UserRepo;
 import com.app.security.JWTFilter;
 import com.app.service.UserDetailsServiceImpl;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,16 +26,19 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import org.springframework.security.web.SecurityFilterChain;
 
+import java.util.Optional;
+import java.util.Set;
+
 
 @SpringBootTest
 class SecurityConfigTest {
+
 
     @MockitoBean
     private JWTFilter jwtFilter;
 
     @MockitoBean
     private UserDetailsServiceImpl userDetailsServiceImpl;
-
 
     @Autowired
     @Qualifier("filterChain")

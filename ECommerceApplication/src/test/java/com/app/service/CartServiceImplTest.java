@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.app.config.UserInfoConfig;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Spy;
@@ -26,6 +27,8 @@ import com.app.repository.CartItemRepo;
 import com.app.repository.CartRepo;
 import com.app.repository.ProductRepo;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 public class CartServiceImplTest {
@@ -38,6 +41,10 @@ public class CartServiceImplTest {
 
     @Mock
     private CartItemRepo cartItemRepo;
+
+
+
+    private AutoCloseable mocks;
 
 
     @Spy
@@ -53,7 +60,7 @@ public class CartServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        mocks = MockitoAnnotations.openMocks(this);
 
         cart = new Cart();
         cart.setCartId(1L);
@@ -83,6 +90,15 @@ public class CartServiceImplTest {
         var auth = new UsernamePasswordAuthenticationToken(principal, null, List.of());
         SecurityContextHolder.getContext().setAuthentication(auth);
 
+    }
+
+    @AfterEach
+    void tearDown() {
+        try {
+            mocks.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     // ---------------------------------------------------------
@@ -161,6 +177,36 @@ public class CartServiceImplTest {
         assertEquals(expected, ex.getMessage());
     }
 
+
+    @Test
+    void addProductToCart_WhenUserIdIsInvalid_ShouldThrowSecurityException() {
+        UserInfoConfig principal = mock(UserInfoConfig.class);
+        when(principal.getUserId()).thenReturn(0L);
+
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getPrincipal()).thenReturn(principal);
+
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+
+        SecurityContextHolder.setContext(securityContext);
+
+        SecurityException ex = assertThrows(
+                SecurityException.class,
+                () -> cartService.addProductToCart(2L, 3)
+        );
+
+        assertEquals("current user is not stored correctly", ex.getMessage());
+
+        verifyNoInteractions(cartRepo, productRepo, cartItemRepo);
+
+        SecurityContextHolder.clearContext();
+        try {
+            mocks.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 
 
