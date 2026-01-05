@@ -1,6 +1,7 @@
 package com.app.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.app.config.UserInfoConfig;
@@ -18,9 +19,6 @@ import com.app.dto.ProductDTO;
 import com.app.repository.CartItemRepo;
 import com.app.repository.CartRepo;
 import com.app.repository.ProductRepo;
-
-import java.util.Optional;
-
 
 import jakarta.transaction.Transactional;
 
@@ -40,16 +38,23 @@ public class CartServiceImpl implements CartService {
 	@Autowired
 	private ModelMapper modelMapper;
 
+	/*@
+	  private invariant cartRepo != null;
+	  private invariant productRepo != null;
+	  private invariant cartItemRepo != null;
+	  private invariant modelMapper != null;
+	@*/
 
 
 	@Override
 	public CartDTO addProductToCart(Long productId, Integer quantity) {
 
-		Long userId = ((UserInfoConfig) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUserId();
-		if(userId < 1) {
+		Long userId = ((UserInfoConfig) SecurityContextHolder.getContext()
+				.getAuthentication().getPrincipal()).getUserId();
+
+		if (userId < 1) {
 			throw new SecurityException("current user is not stored correctly");
 		}
-
 
 		Cart cart = cartRepo.findCartByUserId(userId)
 				.orElseThrow(() -> new APIException("Cart for current user was not found!!!"));
@@ -57,7 +62,8 @@ public class CartServiceImpl implements CartService {
 		Product product = productRepo.findById(productId)
 				.orElseThrow(() -> new APIException("Product with productId" + productId + "was not found!!!"));
 
-		Optional<CartItem>  cartItem = cartItemRepo.findCartItemByProductIdAndCartId(cart.getCartId(), productId);
+		Optional<CartItem> cartItem =
+				cartItemRepo.findCartItemByProductIdAndCartId(cart.getCartId(), productId);
 
 		if (cartItem.isPresent()) {
 			throw new APIException("Product " + product.getName() + " already exists in the cart!!!");
@@ -73,7 +79,6 @@ public class CartServiceImpl implements CartService {
 		}
 
 		CartItem newCartItem = new CartItem();
-
 		newCartItem.setProduct(product);
 		newCartItem.setCart(cart);
 		newCartItem.setQuantity(quantity);
@@ -83,19 +88,19 @@ public class CartServiceImpl implements CartService {
 		cartItemRepo.save(newCartItem);
 
 		product.setQuantity(product.getQuantity() - quantity);
-
 		cart.setTotalPrice(cart.getTotalPrice() + (product.getSpecialPrice() * quantity));
 
 		CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
 
 		List<ProductDTO> productDTOs = cart.getCartItems().stream()
-				.map(p -> modelMapper.map(p.getProduct(), ProductDTO.class)).collect(Collectors.toList());
+				.map(p -> modelMapper.map(p.getProduct(), ProductDTO.class))
+				.collect(Collectors.toList());
 
 		cartDTO.setProducts(productDTOs);
 
 		return cartDTO;
-
 	}
+
 
 	@Override
 	public List<CartDTO> getAllCarts() {
@@ -105,18 +110,19 @@ public class CartServiceImpl implements CartService {
 			throw new APIException("No cart exists!!!");
 		}
 
-        return carts.stream().map(cart -> {
-            CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
+		return carts.stream().map(cart -> {
+			CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
 
-            List<ProductDTO> products = cart.getCartItems().stream()
-                    .map(p -> modelMapper.map(p.getProduct(), ProductDTO.class)).collect(Collectors.toList());
+			List<ProductDTO> products = cart.getCartItems().stream()
+					.map(p -> modelMapper.map(p.getProduct(), ProductDTO.class))
+					.collect(Collectors.toList());
 
-            cartDTO.setProducts(products);
+			cartDTO.setProducts(products);
 
-            return cartDTO;
-
-        }).collect(Collectors.toList());
+			return cartDTO;
+		}).collect(Collectors.toList());
 	}
+
 
 	@Override
 	public CartDTO getCart(String emailId, Long cartId) {
@@ -127,35 +133,16 @@ public class CartServiceImpl implements CartService {
 		}
 
 		CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
-		
+
 		List<ProductDTO> products = cart.getCartItems().stream()
-				.map(p -> modelMapper.map(p.getProduct(), ProductDTO.class)).collect(Collectors.toList());
+				.map(p -> modelMapper.map(p.getProduct(), ProductDTO.class))
+				.collect(Collectors.toList());
 
 		cartDTO.setProducts(products);
 
 		return cartDTO;
 	}
 
-	@Override
-	public void updateProductInCarts(Long cartId, Long productId) {
-		Cart cart = cartRepo.findById(cartId)
-				.orElseThrow(() -> new APIException("Cart with cartId" + cartId + "was not found!!!"));
-
-		Product product = productRepo.findById(productId)
-				.orElseThrow(() -> new APIException("Product with productId" + productId + "was not found!!!"));
-
-		CartItem cartItem = cartItemRepo.findCartItemByProductIdAndCartId(cartId, productId)
-				.orElseThrow(() -> new APIException("Product " + product.getName() + " not available in the cart!!!"));
-
-
-		double cartPriceWithoutPreviousQuantity = cart.getTotalPrice() - (cartItem.getProductPrice() * cartItem.getQuantity());
-
-		cartItem.setProductPrice(product.getSpecialPrice());
-
-		cart.setTotalPrice(cartPriceWithoutPreviousQuantity + (cartItem.getProductPrice() * cartItem.getQuantity()));
-
-		cartItemRepo.save(cartItem);
-	}
 
 	@Override
 	public CartDTO updateProductQuantityInCart(Long cartId, Long productId, Integer quantity) {
@@ -177,8 +164,8 @@ public class CartServiceImpl implements CartService {
 		CartItem cartItem = cartItemRepo.findCartItemByProductIdAndCartId(cartId, productId)
 				.orElseThrow(() -> new APIException("Product " + product.getName() + " not available in the cart!!!"));
 
-
-		double cartPriceWithoutPreviousQuantity = cart.getTotalPrice() - (cartItem.getProductPrice() * cartItem.getQuantity());
+		double cartPriceWithoutPreviousQuantity =
+				cart.getTotalPrice() - (cartItem.getProductPrice() * cartItem.getQuantity());
 
 		product.setQuantity(product.getQuantity() + cartItem.getQuantity() - quantity);
 
@@ -188,19 +175,42 @@ public class CartServiceImpl implements CartService {
 
 		cart.setTotalPrice(cartPriceWithoutPreviousQuantity + (cartItem.getProductPrice() * quantity));
 
-
 		cartItemRepo.save(cartItem);
 
 		CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
 
 		List<ProductDTO> productDTOs = cart.getCartItems().stream()
-				.map(p -> modelMapper.map(p.getProduct(), ProductDTO.class)).collect(Collectors.toList());
+				.map(p -> modelMapper.map(p.getProduct(), ProductDTO.class))
+				.collect(Collectors.toList());
 
 		cartDTO.setProducts(productDTOs);
 
 		return cartDTO;
-
 	}
+
+	@Override
+	public void updateProductInCarts(Long cartId, Long productId) {
+		Cart cart = cartRepo.findById(cartId)
+				.orElseThrow(() -> new APIException("Cart with cartId" + cartId + "was not found!!!"));
+
+		Product product = productRepo.findById(productId)
+				.orElseThrow(() -> new APIException("Product with productId" + productId + "was not found!!!"));
+
+		CartItem cartItem = cartItemRepo.findCartItemByProductIdAndCartId(cartId, productId)
+				.orElseThrow(() -> new APIException("Product " + product.getName() + " not available in the cart!!!"));
+
+		double cartPriceWithoutPreviousQuantity =
+				cart.getTotalPrice() - (cartItem.getProductPrice() * cartItem.getQuantity());
+
+		cartItem.setProductPrice(product.getSpecialPrice());
+		cart.setTotalPrice(cartPriceWithoutPreviousQuantity + (cartItem.getProductPrice() * cartItem.getQuantity()));
+
+		cartItemRepo.save(cartItem);
+	}
+
+
+
+
 
 	@Override
 	public String deleteProductFromCart(Long cartId, Long productId) {
@@ -208,9 +218,8 @@ public class CartServiceImpl implements CartService {
 				.orElseThrow(() -> new APIException("Cart with cartId" + cartId + "was not found!!!"));
 
 		CartItem cartItem = cartItemRepo.findCartItemByProductIdAndCartId(cartId, productId)
-				.orElseThrow(() -> new APIException("Cart item with cartId" + cartId  + "and productId" + productId + "was not found!!!"));
-
-
+				.orElseThrow(() -> new APIException("Cart item with cartId" + cartId
+						+ "and productId" + productId + "was not found!!!"));
 
 		cart.setTotalPrice(cart.getTotalPrice() - (cartItem.getProductPrice() * cartItem.getQuantity()));
 
@@ -221,5 +230,4 @@ public class CartServiceImpl implements CartService {
 
 		return "Product " + cartItem.getProduct().getName() + " removed from the cart !!!";
 	}
-
 }

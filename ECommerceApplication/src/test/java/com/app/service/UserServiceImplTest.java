@@ -27,9 +27,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.app.exception.APIException;
-import com.app.exception.ResourceNotFoundException;
 import com.app.dto.AddressDTO;
-
 import com.app.dto.UserDTO;
 import com.app.dto.UserResponse;
 import com.app.repository.AddressRepo;
@@ -40,8 +38,6 @@ public class UserServiceImplTest {
 
     @Mock
     private UserRepo userRepo;
-
-
 
     @Mock
     private AddressRepo addressRepo;
@@ -64,7 +60,6 @@ public class UserServiceImplTest {
     private CartItem cartItem;
     private Product product;
     private Address address;
-    private Role role;
     private Long userId;
 
     @BeforeEach
@@ -135,8 +130,6 @@ public class UserServiceImplTest {
         cart2.setUser(userWithoutAddress);
         userWithoutAddress.setCart(cart2);
         userWithoutAddress.setAddresses(new ArrayList<>());
-
-
     }
 
     // ---------------------------------------------------------
@@ -188,7 +181,6 @@ public class UserServiceImplTest {
         assertNotNull(result.getAddress());
         assertEquals(userCreateDTO.getAddress().getCity(), result.getAddress().getCity());
     }
-
 
     @Test
     void testRegisterUser_Success_AddressAlreadyExists() {
@@ -250,12 +242,10 @@ public class UserServiceImplTest {
 
         when(userRepo.getUserByEmail(any())).thenReturn(Optional.of(user));
 
-
-        APIException ex = assertThrows(
+        assertThrows(
                 APIException.class,
                 () -> userService.registerUser(userDTO)
         );
-
     }
 
     @Test
@@ -388,7 +378,7 @@ public class UserServiceImplTest {
 
         assertEquals(users.size(), response.getContent().size());
         assertEquals(userWithoutAddress.getUserId(), response.getContent().get(0).getUserId());
-        assertNull(response.getContent().get(0).getAddress()); // branch when user.getAddresses().size() == 0
+        assertNull(response.getContent().get(0).getAddress());
     }
 
     @Test
@@ -426,11 +416,11 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void testGetUserById_UserNotFound_ThrowsResourceNotFoundException() {
+    void testGetUserById_UserNotFound_ThrowsAPIException() {
         when(userRepo.findById(userId)).thenReturn(Optional.empty());
 
         assertThrows(
-                ResourceNotFoundException.class,
+                APIException.class,
                 () -> userService.getUserById(userId)
         );
     }
@@ -499,7 +489,6 @@ public class UserServiceImplTest {
         assertEquals("encoded2", user.getPassword());
         assertEquals(address.getCity(), result.getAddress().getCity());
 
-        // No new address saved in this branch
         verify(addressRepo, never()).save(any(Address.class));
     }
 
@@ -550,7 +539,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void testUpdateUser_UserNotFound_ThrowsResourceNotFoundException() {
+    void testUpdateUser_UserNotFound_ThrowsAPIException() {
         UserDTO userDTO = new UserDTO();
         userDTO.setFirstName("X");
         userDTO.setLastName("Y");
@@ -561,7 +550,7 @@ public class UserServiceImplTest {
         when(userRepo.findById(userId)).thenReturn(Optional.empty());
 
         assertThrows(
-                ResourceNotFoundException.class,
+                APIException.class,
                 () -> userService.updateUser(userId, userDTO)
         );
     }
@@ -589,11 +578,11 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void testDeleteUser_UserNotFound_ThrowsResourceNotFoundException() {
+    void testDeleteUser_UserNotFound_ThrowsAPIException() {
         when(userRepo.findById(userId)).thenReturn(Optional.empty());
 
         assertThrows(
-                ResourceNotFoundException.class,
+                APIException.class,
                 () -> userService.deleteUser(userId)
         );
     }

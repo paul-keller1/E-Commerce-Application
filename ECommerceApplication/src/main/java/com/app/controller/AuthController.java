@@ -13,11 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.app.exception.UserNotFoundException;
 import com.app.dto.LoginCredentials;
@@ -48,10 +44,25 @@ public class AuthController {
 	@Value("${admin.register.secret}")
 	private String adminRegisterSecret;
 
-	@PostMapping("/register/user")
-	public ResponseEntity<Map<String, Object>> registerHandler(@Valid @RequestBody UserCreateDTO user) throws UserNotFoundException {
-		String encodedPass = passwordEncoder.encode(user.getPassword());
+	/*@
+	  private invariant userService != null;
+	  private invariant jwtService != null;
+	  private invariant authenticationManager != null;
+	  private invariant passwordEncoder != null;
+	@*/
 
+	/*@
+	  public normal_behavior
+	  requires user != null;
+	  ensures \result != null;
+	  ensures \result.getStatusCodeValue() == 201;
+	  ensures \result.getBody() != null;
+	@*/
+	@PostMapping("/register/user")
+	public ResponseEntity<Map<String, Object>> registerHandler(@Valid @RequestBody UserCreateDTO user)
+			throws UserNotFoundException {
+
+		String encodedPass = passwordEncoder.encode(user.getPassword());
 		user.setPassword(encodedPass);
 
 		UserDTO userDTO = userService.registerUser(user);
@@ -64,8 +75,17 @@ public class AuthController {
 		return new ResponseEntity<>(response, HttpStatus.CREATED);
 	}
 
-
-
+	/*@
+	  public normal_behavior
+	  requires secret != null;
+	  requires user != null;
+	  requires adminRegisterSecret != null;
+	  requires !adminRegisterSecret.isBlank();
+	  requires adminRegisterSecret.equals(secret);
+	  ensures \result != null;
+	  ensures \result.getStatusCodeValue() == 201;
+	  ensures \result.getBody() != null;
+	@*/
 	@PostMapping("/register/admin")
 	public ResponseEntity<Map<String, Object>> registerAdminHandler(
 			@RequestParam("secret") String secret,
@@ -88,16 +108,20 @@ public class AuthController {
 		return new ResponseEntity<>(response, HttpStatus.CREATED);
 	}
 
+	/*@
+	  public normal_behavior
+	  requires credentials != null;
+	  ensures \result != null;
+	@*/
 	@PostMapping("/login")
 	public Map<String, Object> loginHandler(@Valid @RequestBody LoginCredentials credentials) {
 
-		UsernamePasswordAuthenticationToken authCredentials = new UsernamePasswordAuthenticationToken(
-				credentials.getEmail(), credentials.getPassword());
+		UsernamePasswordAuthenticationToken authCredentials =
+				new UsernamePasswordAuthenticationToken(credentials.getEmail(), credentials.getPassword());
 
 		authenticationManager.authenticate(authCredentials);
 
 		String token = jwtService.generateToken(credentials.getEmail());
-
 
 		return Collections.singletonMap("jwt-token", token);
 	}

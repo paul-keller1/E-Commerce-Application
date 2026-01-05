@@ -29,7 +29,6 @@ import com.app.model.OrderItem;
 import com.app.model.Payment;
 import com.app.model.Product;
 import com.app.exception.APIException;
-import com.app.exception.ResourceNotFoundException;
 import com.app.dto.OrderDTO;
 import com.app.dto.OrderResponse;
 import com.app.repository.CartItemRepo;
@@ -135,7 +134,6 @@ public class OrderServiceImplTest {
         }
     }
 
-
     // ---------------------------------------------------------
     // 1. placeOrder
     // ---------------------------------------------------------
@@ -187,10 +185,12 @@ public class OrderServiceImplTest {
     void testPlaceOrder_CartNotFound() {
         when(cartRepo.findCartByEmailAndCartId(emailId, cartId)).thenReturn(null);
 
-        assertThrows(
-                ResourceNotFoundException.class,
+        APIException ex = assertThrows(
+                APIException.class,
                 () -> orderService.placeOrder(emailId, cartId, "CARD")
         );
+
+        assertEquals("Cart not found with cartId: " + cartId, ex.getMessage());
     }
 
     @Test
@@ -254,10 +254,12 @@ public class OrderServiceImplTest {
     void testGetOrder_NotFound() {
         when(orderRepo.findOrderByEmailAndOrderId(emailId, orderId)).thenReturn(null);
 
-        assertThrows(
-                ResourceNotFoundException.class,
+        APIException ex = assertThrows(
+                APIException.class,
                 () -> orderService.getOrder(emailId, orderId)
         );
+
+        assertEquals("Order not found with orderId: " + orderId, ex.getMessage());
     }
 
     // ---------------------------------------------------------
@@ -322,9 +324,11 @@ public class OrderServiceImplTest {
     void testUpdateOrder_OrderNotFound() {
         when(orderRepo.findOrderByEmailAndOrderId(emailId, orderId)).thenReturn(null);
 
-        assertThrows(
-                ResourceNotFoundException.class,
+        APIException ex = assertThrows(
+                APIException.class,
                 () -> orderService.updateOrder(emailId, orderId, "ANY_STATUS")
         );
+
+        assertEquals("Order not found with orderId: " + orderId, ex.getMessage());
     }
 }
