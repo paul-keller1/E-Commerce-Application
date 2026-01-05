@@ -62,6 +62,7 @@ public class JWTService {
 	public String generateToken(String email) {
 		Map<String, Object> claims = new HashMap<>();
 		return Jwts.builder()
+				.subject(email)
 				.claims()
 				.add(claims)
 				.subject(email)
@@ -88,7 +89,7 @@ public class JWTService {
 	  ensures \result != null;
 	@*/
 	public String extractUserName(String token) {
-		return extractClaim(token, Claims::getSubject);
+		return extractAllClaims(token).getSubject();
 	}
 
 	/*@
