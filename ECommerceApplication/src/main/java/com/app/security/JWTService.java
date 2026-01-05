@@ -58,7 +58,6 @@ public class JWTService {
 				.compact();
 	}
 
-	feature/JML
 
 	/*@
 	  private normal_behavior
