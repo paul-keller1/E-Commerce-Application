@@ -15,13 +15,13 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.app.model.Cart;
-import com.app.model.Category;
-import com.app.model.Product;
-import com.app.exception.APIException;
 import com.app.dto.CartDTO;
 import com.app.dto.ProductDTO;
 import com.app.dto.ProductResponse;
+import com.app.exception.APIException;
+import com.app.model.Cart;
+import com.app.model.Category;
+import com.app.model.Product;
 import com.app.repository.CartRepo;
 import com.app.repository.CategoryRepo;
 import com.app.repository.ProductRepo;
@@ -46,9 +46,6 @@ public class ProductServiceImpl implements ProductService {
 	@Autowired
 	private CartService cartService;
 
-
-
-
 	@Autowired
 	private FileService fileService;
 
@@ -57,6 +54,16 @@ public class ProductServiceImpl implements ProductService {
 
 	@Value("${project.image}")
 	private String path;
+
+	/*@
+	  private invariant productRepo != null;
+	  private invariant categoryRepo != null;
+	  private invariant cartRepo != null;
+	  private invariant cartService != null;
+	  private invariant fileService != null;
+	  private invariant modelMapper != null;
+	@*/
+
 
 	@Override
 	public ProductDTO addProduct(Long categoryId, ProductDTO productDTO) {
@@ -84,8 +91,8 @@ public class ProductServiceImpl implements ProductService {
 		product.setPrice(productDTO.getPrice());
 		product.setDiscount(productDTO.getDiscount());
 
-
-		double specialPrice = productDTO.getPrice() - ((productDTO.getDiscount() * 0.01) * productDTO.getPrice());
+		double specialPrice =
+				productDTO.getPrice() - ((productDTO.getDiscount() * 0.01) * productDTO.getPrice());
 		product.setSpecialPrice(specialPrice);
 		product.setCategory(category);
 
@@ -95,11 +102,26 @@ public class ProductServiceImpl implements ProductService {
 		return modelMapper.map(savedProduct, ProductDTO.class);
 	}
 
+
+
+	@Override
+	public List<Product> getAllProductsFull() {
+		return productRepo.findAll();
+	}
+
+
 	@Override
 	public ProductResponse getAllProductsResponse(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
 
-		Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending()
-				: Sort.by(sortBy).descending();
+		Sort sortByAndOrder;
+
+		if (sortOrder.equalsIgnoreCase("asc")) {
+			sortByAndOrder = Sort.by(sortBy).ascending();
+		} else if (sortOrder.equalsIgnoreCase("desc")) {
+			sortByAndOrder = Sort.by(sortBy).descending();
+		} else {
+			throw new APIException("Invalid sort order: " + sortOrder + ". Allowed values: asc, desc");
+		}
 
 		Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
 
@@ -107,11 +129,11 @@ public class ProductServiceImpl implements ProductService {
 
 		List<Product> products = pageProducts.getContent();
 
-		List<ProductDTO> productDTOs = products.stream().map(product -> modelMapper.map(product, ProductDTO.class))
+		List<ProductDTO> productDTOs = products.stream()
+				.map(product -> modelMapper.map(product, ProductDTO.class))
 				.collect(Collectors.toList());
 
 		ProductResponse productResponse = new ProductResponse();
-
 		productResponse.setContent(productDTOs);
 		productResponse.setPageNumber(pageProducts.getNumber());
 		productResponse.setPageSize(pageProducts.getSize());
@@ -122,24 +144,24 @@ public class ProductServiceImpl implements ProductService {
 		return productResponse;
 	}
 
-	@Override
-	public List<Product> getAllProductsFull() {
-
-		return productRepo.findAll();
-	}
-
-
 
 
 	@Override
 	public ProductResponse searchByCategory(Long categoryId, Integer pageNumber, Integer pageSize, String sortBy,
-			String sortOrder) {
+											String sortOrder) {
 
 		Category category = categoryRepo.findById(categoryId)
 				.orElseThrow(() -> new APIException("Category not found with categoryId: " + categoryId));
 
-		Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending()
-				: Sort.by(sortBy).descending();
+		Sort sortByAndOrder;
+
+		if (sortOrder.equalsIgnoreCase("asc")) {
+			sortByAndOrder = Sort.by(sortBy).ascending();
+		} else if (sortOrder.equalsIgnoreCase("desc")) {
+			sortByAndOrder = Sort.by(sortBy).descending();
+		} else {
+			throw new APIException("Invalid sort order: " + sortOrder + ". Allowed values: asc, desc");
+		}
 
 		Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
 
@@ -151,11 +173,11 @@ public class ProductServiceImpl implements ProductService {
 			throw new APIException(category.getCategoryName() + " category doesn't contain any products !!!");
 		}
 
-		List<ProductDTO> productDTOs = products.stream().map(p -> modelMapper.map(p, ProductDTO.class))
+		List<ProductDTO> productDTOs = products.stream()
+				.map(p -> modelMapper.map(p, ProductDTO.class))
 				.collect(Collectors.toList());
 
 		ProductResponse productResponse = new ProductResponse();
-
 		productResponse.setContent(productDTOs);
 		productResponse.setPageNumber(pageProducts.getNumber());
 		productResponse.setPageSize(pageProducts.getSize());
@@ -166,26 +188,36 @@ public class ProductServiceImpl implements ProductService {
 		return productResponse;
 	}
 
+
 	@Override
-	public ProductResponse searchProductByKeyword(String keyword, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
-		Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending()
-				: Sort.by(sortBy).descending();
+	public ProductResponse searchProductByKeyword(String keyword, Integer pageNumber, Integer pageSize, String sortBy,
+												  String sortOrder) {
+
+		Sort sortByAndOrder;
+
+		if (sortOrder.equalsIgnoreCase("asc")) {
+			sortByAndOrder = Sort.by(sortBy).ascending();
+		} else if (sortOrder.equalsIgnoreCase("desc")) {
+			sortByAndOrder = Sort.by(sortBy).descending();
+		} else {
+			throw new APIException("Invalid sort order: " + sortOrder + ". Allowed values: asc, desc");
+		}
 
 		Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
 
 		Page<Product> pageProducts = productRepo.findByNameLike(keyword, pageDetails);
 
 		List<Product> products = pageProducts.getContent();
-		
+
 		if (products.size() == 0) {
 			throw new APIException("Products not found with keyword: " + keyword);
 		}
 
-		List<ProductDTO> productDTOs = products.stream().map(p -> modelMapper.map(p, ProductDTO.class))
+		List<ProductDTO> productDTOs = products.stream()
+				.map(p -> modelMapper.map(p, ProductDTO.class))
 				.collect(Collectors.toList());
 
 		ProductResponse productResponse = new ProductResponse();
-
 		productResponse.setContent(productDTOs);
 		productResponse.setPageNumber(pageProducts.getNumber());
 		productResponse.setPageSize(pageProducts.getSize());
@@ -196,17 +228,19 @@ public class ProductServiceImpl implements ProductService {
 		return productResponse;
 	}
 
+
 	@Override
 	public ProductDTO updateProduct(Long productId, Product product) {
+
 		Product productFromDB = productRepo.findById(productId)
 				.orElseThrow(() -> new APIException("Product not found with productId: " + productId));
-
 
 		product.setImage(productFromDB.getImage());
 		product.setProductId(productId);
 		product.setCategory(productFromDB.getCategory());
 
-		double specialPrice = product.getPrice() - ((product.getDiscount() * 0.01) * product.getPrice());
+		double specialPrice =
+				product.getPrice() - ((product.getDiscount() * 0.01) * product.getPrice());
 		product.setSpecialPrice(specialPrice);
 
 		Product savedProduct = productRepo.save(product);
@@ -217,12 +251,12 @@ public class ProductServiceImpl implements ProductService {
 			CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
 
 			List<ProductDTO> products = cart.getCartItems().stream()
-					.map(p -> modelMapper.map(p.getProduct(), ProductDTO.class)).collect(Collectors.toList());
+					.map(p -> modelMapper.map(p.getProduct(), ProductDTO.class))
+					.collect(Collectors.toList());
 
 			cartDTO.setProducts(products);
 
 			return cartDTO;
-
 		}).collect(Collectors.toList());
 
 		cartDTOs.forEach(cart -> cartService.updateProductInCarts(cart.getCartId(), productId));
@@ -230,21 +264,23 @@ public class ProductServiceImpl implements ProductService {
 		return modelMapper.map(savedProduct, ProductDTO.class);
 	}
 
+
 	@Override
 	public ProductDTO updateProductImage(Long productId, MultipartFile image) throws IOException {
+
 		Product productFromDB = productRepo.findById(productId)
 				.orElseThrow(() -> new APIException("Product not found with productId: " + productId));
 
-
 		String fileName = fileService.uploadImage(path, image);
-		
+
 		productFromDB.setImage(fileName);
-		
+
 		Product updatedProduct = productRepo.save(productFromDB);
-		
+
 		return modelMapper.map(updatedProduct, ProductDTO.class);
 	}
-	
+
+
 	@Override
 	public String deleteProduct(Long productId) {
 
@@ -259,5 +295,4 @@ public class ProductServiceImpl implements ProductService {
 
 		return "Product with productId: " + productId + " deleted successfully !!!";
 	}
-
 }

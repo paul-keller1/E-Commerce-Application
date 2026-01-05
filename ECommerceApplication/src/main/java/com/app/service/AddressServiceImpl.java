@@ -10,12 +10,12 @@ import org.springframework.stereotype.Service;
 import com.app.model.Address;
 import com.app.model.User;
 import com.app.exception.APIException;
-import com.app.exception.ResourceNotFoundException;
 import com.app.dto.AddressDTO;
 import com.app.repository.AddressRepo;
 import com.app.repository.UserRepo;
 
 import jakarta.transaction.Transactional;
+
 
 @Transactional
 @Service
@@ -30,6 +30,13 @@ public class AddressServiceImpl implements AddressService {
 	@Autowired
 	private ModelMapper modelMapper;
 
+	/*@
+	  private invariant addressRepo != null;
+ 	  private invariant userRepo != null;
+      private invariant modelMapper != null;
+    @*/
+
+
 	@Override
 	public AddressDTO createAddress(AddressDTO addressDTO) {
 
@@ -40,15 +47,16 @@ public class AddressServiceImpl implements AddressService {
 		String street = addressDTO.getStreet();
 		String buildingName = addressDTO.getBuildingName();
 
-		Address addressFromDB = addressRepo.findByCountryAndStateAndCityAndPincodeAndStreetAndBuildingName(country,
-				state, city, pincode, street, buildingName);
+		Address addressFromDB =
+				addressRepo.findByCountryAndStateAndCityAndPincodeAndStreetAndBuildingName(
+						country, state, city, pincode, street, buildingName);
 
 		if (addressFromDB != null) {
-			throw new APIException("Address already exists with addressId: " + addressFromDB.getAddressId());
+			throw new APIException(
+					"Address already exists with addressId: " + addressFromDB.getAddressId());
 		}
 
 		Address address = modelMapper.map(addressDTO, Address.class);
-
 		Address savedAddress = addressRepo.save(address);
 
 		return modelMapper.map(savedAddress, AddressDTO.class);
@@ -58,29 +66,38 @@ public class AddressServiceImpl implements AddressService {
 	public List<AddressDTO> getAddresses() {
 		List<Address> addresses = addressRepo.findAll();
 
-		List<AddressDTO> addressDTOs = addresses.stream().map(address -> modelMapper.map(address, AddressDTO.class))
+		return addresses.stream()
+				.map(address -> modelMapper.map(address, AddressDTO.class))
 				.collect(Collectors.toList());
-
-		return addressDTOs;
 	}
+
 
 	@Override
 	public AddressDTO getAddress(Long addressId) {
 		Address address = addressRepo.findById(addressId)
-				.orElseThrow(() -> new ResourceNotFoundException("Address", "addressId", addressId));
+				.orElseThrow(() ->
+						new APIException("Address with addressId " + addressId + " not found"));
 
 		return modelMapper.map(address, AddressDTO.class);
 	}
 
+
 	@Override
 	public AddressDTO updateAddress(Long addressId, Address address) {
-		Address addressFromDB = addressRepo.findByCountryAndStateAndCityAndPincodeAndStreetAndBuildingName(
-				address.getCountry(), address.getState(), address.getCity(), address.getPincode(), address.getStreet(),
-				address.getBuildingName());
+
+		Address addressFromDB =
+				addressRepo.findByCountryAndStateAndCityAndPincodeAndStreetAndBuildingName(
+						address.getCountry(),
+						address.getState(),
+						address.getCity(),
+						address.getPincode(),
+						address.getStreet(),
+						address.getBuildingName());
 
 		if (addressFromDB == null) {
 			addressFromDB = addressRepo.findById(addressId)
-					.orElseThrow(() -> new APIException("Address with addressId" +  addressId + "not found"));
+					.orElseThrow(() ->
+							new APIException("Address with addressId " + addressId + " not found"));
 
 			addressFromDB.setCountry(address.getCountry());
 			addressFromDB.setState(address.getState());
@@ -90,8 +107,8 @@ public class AddressServiceImpl implements AddressService {
 			addressFromDB.setBuildingName(address.getBuildingName());
 
 			Address updatedAddress = addressRepo.save(addressFromDB);
-
 			return modelMapper.map(updatedAddress, AddressDTO.class);
+
 		} else {
 			List<User> users = userRepo.findByAddress(addressId);
 			final Address a = addressFromDB;
@@ -104,16 +121,18 @@ public class AddressServiceImpl implements AddressService {
 		}
 	}
 
+
 	@Override
 	public String deleteAddress(Long addressId) {
+
 		Address addressFromDB = addressRepo.findById(addressId)
-				.orElseThrow(() -> new ResourceNotFoundException("Address", "addressId", addressId));
+				.orElseThrow(() ->
+						new APIException("Address with addressId " + addressId + " not found"));
 
 		List<User> users = userRepo.findByAddress(addressId);
 
 		users.forEach(user -> {
 			user.getAddresses().remove(addressFromDB);
-
 			userRepo.save(user);
 		});
 
@@ -121,5 +140,4 @@ public class AddressServiceImpl implements AddressService {
 
 		return "Address deleted succesfully with addressId: " + addressId;
 	}
-
 }

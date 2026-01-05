@@ -2,7 +2,6 @@ package com.app.service;
 
 import com.app.dto.AddressDTO;
 import com.app.exception.APIException;
-import com.app.exception.ResourceNotFoundException;
 import com.app.model.Address;
 import com.app.model.User;
 import com.app.repository.AddressRepo;
@@ -127,10 +126,10 @@ class AddressServiceImplTest {
     }
 
     @Test
-    void getAddress_WhenNotFound_ShouldThrowException() {
+    void getAddress_WhenNotFound_ShouldThrowApiException() {
         when(addressRepo.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> addressService.getAddress(1L));
+        assertThrows(APIException.class, () -> addressService.getAddress(1L));
     }
 
     @Test
@@ -187,6 +186,7 @@ class AddressServiceImplTest {
         assertEquals(matching.getCity(), result.getCity());
         verify(addressRepo).deleteById(1L);
         verify(userRepo, atLeastOnce()).save(user);
+        assertTrue(user.getAddresses().contains(matching));
     }
 
     @Test
@@ -211,12 +211,11 @@ class AddressServiceImplTest {
     }
 
     @Test
-    void deleteAddress_WhenNotFound_ShouldThrowException() {
+    void deleteAddress_WhenNotFound_ShouldThrowApiException() {
         when(addressRepo.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> addressService.deleteAddress(1L));
+        assertThrows(APIException.class, () -> addressService.deleteAddress(1L));
     }
-
 
     @Test
     void updateAddress_AddressNotFound_ThrowsAPIException() {
@@ -243,12 +242,11 @@ class AddressServiceImplTest {
                 () -> addressService.updateAddress(addressId, address)
         );
 
-        assertTrue(ex.getMessage().contains("Address with addressId" + addressId + "not found"));
+        assertTrue(ex.getMessage().contains("Address with addressId " + addressId + " not found"));
 
         verify(addressRepo).findByCountryAndStateAndCityAndPincodeAndStreetAndBuildingName(
                 anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
         verify(addressRepo).findById(addressId);
         verify(addressRepo, never()).save(any(Address.class));
     }
-
 }
