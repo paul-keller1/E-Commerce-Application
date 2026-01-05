@@ -1,0 +1,39 @@
+name: build-test-jacoco-docker
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Compile + Test + JaCoCo report
+        run: mvn -B clean verify
+
+
+      - name: Upload JaCoCo report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: target/site/jacoco/
+
+      - name: Build Docker image
+        run: |
+          docker build -t myapp:${{ github.sha }} .
+          docker image ls myapp:${{ github.sha }}
