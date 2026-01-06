@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
 
 import com.app.model.Cart;
+import nl.jqno.equalsverifier.EqualsVerifier;
+import nl.jqno.equalsverifier.Warning;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -97,4 +99,17 @@ class UserInfoConfigTest {
 
         assertEquals("user@example.com", u1.getEmail());
     }
+
+
+
+
+
+    @Test
+    void equalsAndHashCode_ShouldConformToContract() {
+        EqualsVerifier.forClass(UserInfoConfig.class)
+                .withOnlyTheseFields("email")
+                .suppress(Warning.NONFINAL_FIELDS, Warning.STRICT_INHERITANCE)
+                .verify();
+    }
+
 }

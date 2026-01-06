@@ -131,7 +131,6 @@ class AddressServiceImplTest {
 
         assertThrows(APIException.class, () -> addressService.getAddress(1L));
     }
-
     @Test
     void updateAddress_WhenNoMatchingAddress_ShouldUpdateExisting() {
         Address existing = buildAddress();
@@ -154,15 +153,28 @@ class AddressServiceImplTest {
 
         AddressDTO result = addressService.updateAddress(1L, newData);
 
-        assertEquals("NewCity", result.getCity());
+        // Assert every updated attribute (kills "" mutants in getters used for mapping)
         assertEquals("NewCountry", result.getCountry());
+        assertEquals("NewState", result.getState());
+        assertEquals("NewCity", result.getCity());
+        assertEquals("99999", result.getPincode());
+        assertEquals("NewStreet", result.getStreet());
+        assertEquals("NewBuilding", result.getBuildingName());
+
         verify(addressRepo).save(existing);
     }
+
 
     @Test
     void updateAddress_WhenMatchingAddressExists_ShouldAttachToUsersAndDeleteOld() {
         Address matching = buildAddress();
         matching.setAddressId(2L);
+        matching.setCountry("MatchCountry");
+        matching.setState("MatchState");
+        matching.setCity("MatchCity");
+        matching.setPincode("22222");
+        matching.setStreet("MatchStreet");
+        matching.setBuildingName("MatchBuilding");
 
         Address oldAddress = buildAddress();
         oldAddress.setAddressId(1L);
@@ -174,20 +186,25 @@ class AddressServiceImplTest {
         User user = new User();
         user.setAddresses(new ArrayList<>());
 
-        List<User> users = new ArrayList<>();
-        users.add(user);
-
-        when(userRepo.findByAddress(1L)).thenReturn(users);
+        when(userRepo.findByAddress(1L)).thenReturn(List.of(user));
         when(addressRepo.findById(1L)).thenReturn(Optional.of(oldAddress));
         when(userRepo.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
         AddressDTO result = addressService.updateAddress(1L, matching);
 
-        assertEquals(matching.getCity(), result.getCity());
+        // Assert mapping is correct for *all* relevant fields
+        assertEquals("MatchCountry", result.getCountry());
+        assertEquals("MatchState", result.getState());
+        assertEquals("MatchCity", result.getCity());
+        assertEquals("22222", result.getPincode());
+        assertEquals("MatchStreet", result.getStreet());
+        assertEquals("MatchBuilding", result.getBuildingName());
+
         verify(addressRepo).deleteById(1L);
         verify(userRepo, atLeastOnce()).save(user);
         assertTrue(user.getAddresses().contains(matching));
     }
+
 
     @Test
     void deleteAddress_WhenExists_ShouldRemoveFromUsersAndDelete() {

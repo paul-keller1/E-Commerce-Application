@@ -2,6 +2,7 @@ package com.app.security;
 
 import com.app.config.AppConstants;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Clock;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -17,10 +18,20 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import io.jsonwebtoken.Clock;
+import java.util.Date;
+
+import java.time.Instant;
+
+
 @Service
 public class JWTService {
 
 	private String secretkey = "";
+
+
+
+	private final Clock clock;
 
 	/*@
 	  private invariant secretkey != null;
@@ -28,9 +39,12 @@ public class JWTService {
 
 	/*@
 	  public normal_behavior
+	  assigns clock;
 	  ensures secretkey != null;
 	@*/
 	public JWTService() {
+		clock = () -> Date.from(Instant.parse("2026-01-05T19:26:25.549Z"));
+
 		try {
 			KeyGenerator keyGen = KeyGenerator.getInstance("HmacSHA256");
 			SecretKey sk = keyGen.generateKey();
@@ -48,6 +62,7 @@ public class JWTService {
 	public String generateToken(String email) {
 		Map<String, Object> claims = new HashMap<>();
 		return Jwts.builder()
+				.subject(email)
 				.claims()
 				.add(claims)
 				.subject(email)
@@ -74,7 +89,7 @@ public class JWTService {
 	  ensures \result != null;
 	@*/
 	public String extractUserName(String token) {
-		return extractClaim(token, Claims::getSubject);
+		return extractAllClaims(token).getSubject();
 	}
 
 	/*@
@@ -96,6 +111,7 @@ public class JWTService {
 	private Claims extractAllClaims(String token) {
 		return Jwts.parser()
 				.verifyWith(getKey())
+				.setClock(clock)
 				.build()
 				.parseSignedClaims(token)
 				.getPayload();

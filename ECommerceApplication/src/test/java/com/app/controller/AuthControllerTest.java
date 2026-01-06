@@ -3,9 +3,8 @@ package com.app.controller;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -20,6 +19,7 @@ import com.app.security.JWTService;
 import com.app.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -32,20 +32,12 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 class AuthControllerTest {
 
-    @Mock
-    private UserService userService;
+    @Mock private UserService userService;
+    @Mock private JWTService jwtService;
+    @Mock private AuthenticationManager authenticationManager;
+    @Mock private PasswordEncoder passwordEncoder;
 
-    @Mock
-    private JWTService jwtService;
-
-    @Mock
-    private AuthenticationManager authenticationManager;
-
-    @Mock
-    private PasswordEncoder passwordEncoder;
-
-    @InjectMocks
-    private AuthController authController;
+    @InjectMocks private AuthController authController;
 
     @BeforeEach
     void setUp() {
@@ -54,7 +46,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void registerUser_ShouldCreateUserAndReturnToken() throws UserNotFoundException {
+    void registerUser_ShouldCreateUserAndReturnToken_andEncodePassword() throws UserNotFoundException {
         UserCreateDTO createDTO = new UserCreateDTO();
         createDTO.setFirstName("User");
         createDTO.setLastName("One");
@@ -67,19 +59,29 @@ class AuthControllerTest {
         savedUser.setEmail(createDTO.getEmail());
         savedUser.setRoles(Set.of(Role.USER));
 
-        when(passwordEncoder.encode(anyString())).thenReturn("encoded");
-        when(userService.registerUser(createDTO)).thenReturn(savedUser);
+        when(passwordEncoder.encode("plain")).thenReturn("encoded");
         when(jwtService.generateToken(savedUser.getEmail())).thenReturn("jwt-token");
+        when(userService.registerUser(any(UserCreateDTO.class))).thenReturn(savedUser);
 
         ResponseEntity<Map<String, Object>> response = authController.registerHandler(createDTO);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertNotNull(response.getBody());
         assertEquals("jwt-token", response.getBody().get("token"));
         assertEquals(savedUser, response.getBody().get("user"));
+
+        // ✅ Kills PIT mutant: "removed call to setPassword"
+        ArgumentCaptor<UserCreateDTO> captor = ArgumentCaptor.forClass(UserCreateDTO.class);
+        verify(userService).registerUser(captor.capture());
+        assertEquals("encoded", captor.getValue().getPassword());
+        assertNotEquals("plain", captor.getValue().getPassword());
+
+        // extra: ensures encoder used raw password
+        verify(passwordEncoder).encode("plain");
     }
 
     @Test
-    void registerAdmin_WithValidSecret_ShouldCreateAdminUser() {
+    void registerAdmin_WithValidSecret_ShouldCreateAdminUser_andEncodePassword() {
         UserCreateDTO createDTO = new UserCreateDTO();
         createDTO.setFirstName("Admin");
         createDTO.setLastName("User");
@@ -92,15 +94,24 @@ class AuthControllerTest {
         savedUser.setEmail(createDTO.getEmail());
         savedUser.setRoles(Set.of(Role.ADMIN, Role.USER));
 
-        when(passwordEncoder.encode(anyString())).thenReturn("encoded");
-        when(userService.registerAdmin(createDTO)).thenReturn(savedUser);
+        when(passwordEncoder.encode("plain")).thenReturn("encoded");
         when(jwtService.generateToken(savedUser.getEmail())).thenReturn("jwt-token");
+        when(userService.registerAdmin(any(UserCreateDTO.class))).thenReturn(savedUser);
 
-        ResponseEntity<Map<String, Object>> response = authController.registerAdminHandler("super-secret", createDTO);
+        ResponseEntity<Map<String, Object>> response =
+                authController.registerAdminHandler("super-secret", createDTO);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertNotNull(response.getBody());
         assertEquals("jwt-token", response.getBody().get("token"));
         assertEquals(savedUser, response.getBody().get("user"));
+
+        ArgumentCaptor<UserCreateDTO> captor = ArgumentCaptor.forClass(UserCreateDTO.class);
+        verify(userService).registerAdmin(captor.capture());
+        assertEquals("encoded", captor.getValue().getPassword());
+        assertNotEquals("plain", captor.getValue().getPassword());
+
+        verify(passwordEncoder).encode("plain");
     }
 
     @Test
@@ -111,6 +122,9 @@ class AuthControllerTest {
         createDTO.setAddress(new AddressDTO());
 
         assertThrows(APIException.class, () -> authController.registerAdminHandler("wrong", createDTO));
+
+        // optional: ensure nothing happened
+        verifyNoInteractions(userService, passwordEncoder, jwtService);
     }
 
     @Test
@@ -123,6 +137,7 @@ class AuthControllerTest {
         createDTO.setAddress(new AddressDTO());
 
         assertThrows(APIException.class, () -> authController.registerAdminHandler("super-secret", createDTO));
+        verifyNoInteractions(userService, passwordEncoder, jwtService);
     }
 
     @Test
@@ -135,6 +150,7 @@ class AuthControllerTest {
         createDTO.setAddress(new AddressDTO());
 
         assertThrows(APIException.class, () -> authController.registerAdminHandler("super-secret", createDTO));
+        verifyNoInteractions(userService, passwordEncoder, jwtService);
     }
 
     @Test
@@ -148,5 +164,6 @@ class AuthControllerTest {
 
         assertEquals("jwt-token", response.get("jwt-token"));
         assertEquals(1, response.size());
+        verify(authenticationManager).authenticate(any(Authentication.class));
     }
 }

@@ -11,10 +11,7 @@ import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
+import org.mockito.*;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -138,48 +135,6 @@ public class OrderServiceImplTest {
     // 1. placeOrder
     // ---------------------------------------------------------
 
-    @Test
-    void testPlaceOrder_Success() {
-        int initialProductQuantity = product.getQuantity();
-
-        when(cartRepo.findCartByEmailAndCartId(emailId, cart.getCartId())).thenReturn(cart);
-
-        when(paymentRepo.save(any(Payment.class))).thenAnswer(invocation -> {
-            Payment payment = invocation.getArgument(0);
-            payment.setPaymentId(1L);
-            return payment;
-        });
-
-        when(orderRepo.save(any(Order.class))).thenAnswer(invocation -> {
-            Order o = invocation.getArgument(0);
-            o.setOrderId(orderId);
-            return o;
-        });
-
-        when(orderItemRepo.saveAll(anyList())).thenAnswer(invocation -> {
-            List<OrderItem> items = invocation.getArgument(0);
-            long id = 1L;
-            for (OrderItem item : items) {
-                item.setOrderItemId(id++);
-            }
-            return items;
-        });
-
-        OrderDTO result = orderService.placeOrder(emailId, cart.getCartId(), "CARD");
-
-        assertEquals(emailId, result.getEmail());
-        assertEquals(cart.getTotalPrice(), result.getTotalAmount());
-        assertEquals(1, result.getOrderItems().size());
-
-        assertEquals(initialProductQuantity - cartItem.getQuantity(), product.getQuantity());
-
-        verify(cartService, times(1))
-                .deleteProductFromCart(cart.getCartId(), product.getProductId());
-
-        verify(paymentRepo, times(1)).save(any(Payment.class));
-        verify(orderRepo, times(1)).save(any(Order.class));
-        verify(orderItemRepo, times(1)).saveAll(anyList());
-    }
 
     @Test
     void testPlaceOrder_CartNotFound() {
@@ -308,17 +263,93 @@ public class OrderServiceImplTest {
     // ---------------------------------------------------------
 
     @Test
-    void testUpdateOrder_Success() {
-        order.setOrderStatus("OLD_STATUS");
+    void testPlaceOrder_Success() {
+        int initialProductQuantity = product.getQuantity();
 
-        when(orderRepo.findOrderByEmailAndOrderId(emailId, order.getOrderId())).thenReturn(order);
+        when(cartRepo.findCartByEmailAndCartId(emailId, cart.getCartId())).thenReturn(cart);
 
-        String newStatus = "SHIPPED";
-        OrderDTO result = orderService.updateOrder(emailId, order.getOrderId(), newStatus);
+        ArgumentCaptor<Payment> paymentCaptor = ArgumentCaptor.forClass(Payment.class);
+        ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<OrderItem>> orderItemsCaptor = ArgumentCaptor.forClass(List.class);
 
-        assertEquals(newStatus, order.getOrderStatus());
-        assertEquals(newStatus, result.getOrderStatus());
+        when(paymentRepo.save(any(Payment.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        when(orderRepo.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        when(orderItemRepo.saveAll(anyList())).thenAnswer(inv -> inv.getArgument(0));
+
+        OrderDTO result = orderService.placeOrder(emailId, cart.getCartId(), "CARD");
+
+        verify(paymentRepo).save(paymentCaptor.capture());
+        verify(orderRepo).save(orderCaptor.capture());
+        verify(orderItemRepo).saveAll(orderItemsCaptor.capture());
+
+        Payment savedPayment = paymentCaptor.getValue();
+        Order savedOrder = orderCaptor.getValue();
+        List<OrderItem> savedOrderItems = orderItemsCaptor.getValue();
+
+        assertNotNull(savedPayment);
+        assertNotNull(savedOrder);
+        assertNotNull(savedOrderItems);
+        assertEquals(1, savedOrderItems.size());
+
+
+        assertEquals(LocalDate.now(), savedOrder.getOrderDate(),
+                "Order date must be set to today's date");
+        assertEquals("Order Accepted !", savedOrder.getOrderStatus(),
+                "Order status must be set to the accepted status");
+
+        assertEquals(emailId, savedOrder.getEmail());
+        assertEquals(cart.getTotalPrice(), savedOrder.getTotalAmount(), 0.0001);
+
+
+        OrderItem savedItem = savedOrderItems.get(0);
+        assertEquals(cartItem.getDiscount(), savedItem.getDiscount(),
+                "OrderItem.discount must be copied from CartItem");
+        assertEquals(cartItem.getProductPrice(), savedItem.getOrderedProductPrice(), 0.0001,
+                "OrderItem.orderedProductPrice must be copied from CartItem");
+
+        assertSame(savedOrder, savedItem.getOrder(), "OrderItem.order must be set to saved order");
+        assertSame(product, savedItem.getProduct(), "OrderItem.product must be copied from CartItem");
+        assertEquals(cartItem.getQuantity(), savedItem.getQuantity(), "OrderItem.quantity must match cart item");
+
+        assertSame(savedOrder, savedPayment.getOrder(), "Payment.order must be set");
+        assertSame(savedPayment, savedOrder.getPayment(), "Order.payment must be set");
+        assertEquals("CARD", savedPayment.getPaymentMethod());
+
+        assertEquals(initialProductQuantity - cartItem.getQuantity(), product.getQuantity());
+        verify(cartService).deleteProductFromCart(cart.getCartId(), product.getProductId());
+
+        assertEquals(emailId, result.getEmail());
+        assertEquals(cart.getTotalPrice(), result.getTotalAmount(), 0.0001);
+        assertNotNull(result.getOrderItems());
+        assertEquals(1, result.getOrderItems().size());
     }
+
+
+
+    @Test
+    void testUpdateOrder_Success() {
+        String newStatus = "SHIPPED";
+
+        when(orderRepo.findOrderByEmailAndOrderId(emailId, orderId)).thenReturn(order);
+
+        when(orderRepo.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        OrderDTO result = orderService.updateOrder(emailId, orderId, newStatus);
+
+        assertEquals(newStatus, order.getOrderStatus(), "Order status should be updated on entity");
+        assertNotNull(result);
+        assertEquals(orderId, result.getOrderId());
+        assertEquals(emailId, result.getEmail());
+        assertEquals(newStatus, result.getOrderStatus());
+
+        verify(orderRepo).findOrderByEmailAndOrderId(emailId, orderId);
+
+
+    }
+
 
     @Test
     void testUpdateOrder_OrderNotFound() {

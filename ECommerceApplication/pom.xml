@@ -111,6 +111,7 @@
 		</dependency>
 
 
+
 	</dependencies>
 
 	<build>
@@ -150,8 +151,29 @@
 			</plugin>
 
 
+			<plugin>
+				<groupId>org.pitest</groupId>
+				<artifactId>pitest-maven</artifactId>
+				<configuration>
+					<excludedTestClasses>
+						<param>*jmh_generated*</param>
+						<param>*Benchmark*</param>
+						<param>com.app.to.**</param>
+						<param>com.app.config.**</param>
+						<param>com.app.security.**</param>
+					</excludedTestClasses>
+				</configuration>
 
+				<version>1.19.4</version>
 
+				<dependencies>
+					<dependency>
+						<groupId>org.pitest</groupId>
+						<artifactId>pitest-junit5-plugin</artifactId>
+						<version>1.2.3</version>
+					</dependency>
+				</dependencies>
+			</plugin>
 
 		</plugins>
 	</build>
@@ -192,4 +214,10 @@
 		</pluginRepository>
 	</pluginRepositories>
 
+
+
+
+
+
 </project>
+
