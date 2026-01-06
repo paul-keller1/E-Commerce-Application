@@ -68,6 +68,34 @@ class CartItemTest {
         assertEquals(99.99, item.getProductPrice());
     }
 
+
+    //prevents operator swapping
+    @Test
+    void hashCode_shouldMatchFormula_whenIdIsNonNull() {
+        CartItem cartItem = new CartItem();
+        cartItem.setCartItemId(1L);
+
+        // expected = 59*7 + Objects.hashCode(1L)
+        int expected = 59 * 7 + Long.valueOf(1L).hashCode();
+
+        assertEquals(expected, cartItem.hashCode(),
+                "hashCode() should follow: 59*7 + Objects.hashCode(addressId)");
+    }
+
+    //prevents operator swapping
+    @Test
+    void hashCode_shouldMatchFormula_whenIdIsNull() {
+        CartItem cartItem = new CartItem();
+        cartItem.setCartItemId(null);
+
+        // Objects.hashCode(null) == 0
+        int expected = 59 * 7 + 0;
+
+        assertEquals(expected, cartItem.hashCode(),
+                "hashCode() should follow: 59*7 + Objects.hashCode(null)");
+    }
+
+
     @Test
     void testToString_ShouldContainId() {
         CartItem item = new CartItem();

@@ -12,11 +12,8 @@ import com.app.config.UserInfoConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Spy;
+import org.mockito.*;
 import org.modelmapper.ModelMapper;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import com.app.model.Cart;
 import com.app.model.CartItem;
@@ -109,14 +106,33 @@ public class CartServiceImplTest {
     void testAddProductToCart_Success() {
         when(cartRepo.findCartByUserId(anyLong())).thenReturn(Optional.of(cart));
         when(productRepo.findById(product.getProductId())).thenReturn(Optional.of(product));
-        when(cartItemRepo.findCartItemByProductIdAndCartId(cart.getCartId(), product.getProductId())).thenReturn(Optional.empty());
+        when(cartItemRepo.findCartItemByProductIdAndCartId(cart.getCartId(), product.getProductId()))
+                .thenReturn(Optional.empty());
+
+        when(cartItemRepo.save(any(CartItem.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(cartRepo.save(any(Cart.class))).thenAnswer(inv -> inv.getArgument(0));
 
         CartDTO result = cartService.addProductToCart(product.getProductId(), 2);
 
-        assertEquals(200.0, result.getTotalPrice());
-        assertEquals(8, product.getQuantity()); // 10 - 2
-        verify(cartItemRepo, times(1)).save(any(CartItem.class));
+        assertEquals(200.0, result.getTotalPrice(), 0.0001);
+
+        assertEquals(8, product.getQuantity());
+
+        ArgumentCaptor<CartItem> captor = ArgumentCaptor.forClass(CartItem.class);
+        verify(cartItemRepo).save(captor.capture());
+        CartItem saved = captor.getValue();
+
+        assertSame(cart, saved.getCart(), "CartItem.cart must be set");
+        assertSame(product, saved.getProduct(), "CartItem.product must be set");
+        assertEquals(2, saved.getQuantity(), "CartItem.quantity must be set to the added quantity");
+        assertEquals(product.getDiscount(), saved.getDiscount(), "CartItem.discount must be set from product");
+        assertEquals(product.getSpecialPrice(), saved.getProductPrice(), 0.0001, "CartItem.productPrice must be set");
+
+        assertNotNull(result.getProducts());
+        assertFalse(result.getProducts().isEmpty());
+        assertEquals(product.getProductId(), result.getProducts().get(0).getProductId());
     }
+
 
     @Test
     void testAddProductToCart_ProductAlreadyInCart() {
@@ -179,7 +195,7 @@ public class CartServiceImplTest {
 
 
     @Test
-    void addProductToCart_WhenUserIdIsInvalid_ShouldThrowSecurityException() {
+    void testAddProductToCart_WhenUserIdIsInvalid_ShouldThrowSecurityException() {
         UserInfoConfig principal = mock(UserInfoConfig.class);
         when(principal.getUserId()).thenReturn(0L);
 
@@ -207,6 +223,26 @@ public class CartServiceImplTest {
             throw new RuntimeException(e);
         }
     }
+
+
+
+    @Test
+    void testAddProductToCart_QuantityEqualsStock_ShouldSucceed() {
+        when(cartRepo.findCartByUserId(anyLong())).thenReturn(Optional.of(cart));
+        when(productRepo.findById(product.getProductId())).thenReturn(Optional.of(product));
+        when(cartItemRepo.findCartItemByProductIdAndCartId(cart.getCartId(), product.getProductId()))
+                .thenReturn(Optional.empty());
+
+        when(cartItemRepo.save(any(CartItem.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // stock is 10, request exactly 10
+        CartDTO result = cartService.addProductToCart(product.getProductId(), 10);
+
+        assertEquals(0, product.getQuantity(), "Stock should drop to zero when buying all remaining items");
+        assertEquals(1000.0, result.getTotalPrice(), 0.0001);
+    }
+
+
 
 
 

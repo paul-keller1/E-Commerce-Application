@@ -64,6 +64,34 @@ class OrderItemTest {
     }
 
 
+    // prevents operator swapping
+    @Test
+    void hashCode_shouldMatchFormula_whenIdIsNonNull() {
+        OrderItem orderItem = new OrderItem();
+        orderItem.setOrderItemId(1L);
+
+        // expected = 59*7 + Objects.hashCode(1L)
+        int expected = 59 * 7 + Long.valueOf(1L).hashCode();
+
+        assertEquals(expected, orderItem.hashCode(),
+                "hashCode() should follow: 59*7 + Objects.hashCode(orderItemId)");
+    }
+
+    // prevents operator swapping
+    @Test
+    void hashCode_shouldMatchFormula_whenIdIsNull() {
+        OrderItem orderItem = new OrderItem();
+        orderItem.setOrderItemId(null);
+
+        // Objects.hashCode(null) == 0
+        int expected = 59 * 7 + 0;
+
+        assertEquals(expected, orderItem.hashCode(),
+                "hashCode() should follow: 59*7 + Objects.hashCode(null)");
+    }
+
+
+
     @Test
     void testToString_ShouldContainId() {
         OrderItem item = new OrderItem();

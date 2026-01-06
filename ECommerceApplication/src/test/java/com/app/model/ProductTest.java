@@ -162,6 +162,35 @@ public class ProductTest<T extends Product>  {
         assertEquals(199.99, product.getPrice());
     }
 
+
+
+    // prevents operator swapping
+    @Test
+    void hashCode_shouldMatchFormula_whenIdIsNonNull() {
+        Product product = new Product();
+        product.setProductId(1L);
+
+        // expected = 59*7 + Objects.hashCode(1L)
+        int expected = 59 * 7 + Long.valueOf(1L).hashCode();
+
+        assertEquals(expected, product.hashCode(),
+                "hashCode() should follow: 59*7 + Objects.hashCode(productId)");
+    }
+
+    // prevents operator swapping
+    @Test
+    void hashCode_shouldMatchFormula_whenIdIsNull() {
+        Product product = new Product();
+        product.setProductId(null);
+
+        // Objects.hashCode(null) == 0
+        int expected = 59 * 7 + 0;
+
+        assertEquals(expected, product.hashCode(),
+                "hashCode() should follow: 59*7 + Objects.hashCode(null)");
+    }
+
+
     @Test
     void testToString_ShouldContainId() {
         Product product = new Product();

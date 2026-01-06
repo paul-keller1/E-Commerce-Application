@@ -114,6 +114,33 @@ class OrderTest {
         assertEquals("PAID", order.getOrderStatus());
     }
 
+
+    // prevents operator swapping
+    @Test
+    void hashCode_shouldMatchFormula_whenIdIsNonNull() {
+        Order order = new Order();
+        order.setOrderId(1L);
+
+        // expected = 59*7 + Objects.hashCode(1L)
+        int expected = 59 * 7 + Long.valueOf(1L).hashCode();
+
+        assertEquals(expected, order.hashCode(),
+                "hashCode() should follow: 59*7 + Objects.hashCode(orderId)");
+    }
+
+    // prevents operator swapping
+    @Test
+    void hashCode_shouldMatchFormula_whenIdIsNull() {
+        Order order = new Order();
+        order.setOrderId(null);
+
+        // Objects.hashCode(null) == 0
+        int expected = 59 * 7 + 0;
+
+        assertEquals(expected, order.hashCode(),
+                "hashCode() should follow: 59*7 + Objects.hashCode(null)");
+    }
+
     @Test
     void testToString_ShouldContainId() {
         Order order = new Order();
