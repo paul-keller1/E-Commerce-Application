@@ -47,7 +47,7 @@ jobs:
       # SonarQube (store these in GitHub Secrets)
       SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      SONAR_PROJECT_KEY: my-java-web-app
+      SONAR_PROJECT_KEY: ecommerceapplication
 
     steps:
       - name: Checkout
